@@ -83,6 +83,11 @@
       <label for="intro">한마디 (선택)</label>
       <textarea id="intro" placeholder="좋아하는 음식 종류, 왜 참여하고 싶은지 등 자유롭게"></textarea>
 
+      <label style="display:flex; gap:8px; align-items:flex-start; font-weight:500; margin-top:18px; font-size:14px; line-height:1.5;">
+        <input type="checkbox" id="consent" style="width:auto; margin-top:3px; flex:none;">
+        <span>[필수] 개인정보 수집·이용에 동의합니다. <b>수집항목</b> 이름·이메일(선택: 지역·한마디) · <b>목적</b> 미식가 모집·연락 · <b>보유</b> 모집 종료 시까지. 신청 데이터는 국외(Supabase, 인도)에 저장됩니다. <a href="privacy.html" target="_blank" style="color:var(--accent-dark); text-decoration:underline;">개인정보처리방침</a></span>
+      </label>
+
       <button type="submit" class="btn-primary">창립 미식가로 신청하기</button>
       <div class="form-msg" id="formMsg" style="text-align:center;"></div>
     </form>
@@ -100,6 +105,7 @@
   <div class="wrap">
     <a class="logo" href="index.html"><svg class="logomark" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg><span class="brandtext">또미</span></a>
     <div>또 가고 싶은 진짜 맛집 · DDOMI</div>
+    <div style="margin-top:6px; font-size:13px;"><a href="privacy.html" style="color:var(--accent-dark);">개인정보처리방침</a></div>
   </div>
 </footer>
 
@@ -120,6 +126,7 @@
     var intro = document.getElementById('intro').value.trim();
     if(!name){ fail('이름/활동명을 입력해 주세요.'); return; }
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ fail('올바른 이메일 주소를 입력해 주세요.'); return; }
+    if(!document.getElementById('consent').checked){ fail('개인정보 수집·이용에 동의해 주세요.'); return; }
     if(!(CFG.SUPABASE_URL && CFG.SUPABASE_KEY && CFG.SUPABASE_TABLE)){
       fail('접수 설정이 준비 중입니다. 잠시 후 다시 시도해 주세요.'); return;
     }
