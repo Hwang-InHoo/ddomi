@@ -8,10 +8,11 @@
 window.DDOMI_CONFIG = {
   VWORLD_KEY: "5722BAC8-9328-4BCC-B4E4-32B6D4B32AB3",
 
-  // 씨앗 미식가 모집 폼 → Supabase(또미 소유 DB)로 접수 저장
+  // 씨앗 미식가 모집 폼 → Supabase(또미 전용 DB, 서울 리전)로 접수 저장
   // 신청 내역은 Supabase 대시보드 → Table Editor → ddomi_reviewers 에서 확인.
   // (공개 키·URL은 공개돼도 안전 — RLS로 '등록만' 허용, 읽기는 차단)
-  SUPABASE_URL: "https://hdcmzlncwtmhmnfstokt.supabase.co",
-  SUPABASE_KEY: "sb_publishable_TFypc74O_8v6r0RpXnnyXg_WPcbS3mJ",
+  // 프로젝트: ddomi (wwmpszugglbpypsdaxsa, ap-northeast-2/서울) — 2026-09-15 캘린더 프로젝트에서 분리
+  SUPABASE_URL: "https://wwmpszugglbpypsdaxsa.supabase.co",
+  SUPABASE_KEY: "sb_publishable_zbpqvbsSnrEE9V5ypU29zg_1MzfyJX3",
   SUPABASE_TABLE: "ddomi_reviewers"
 };
