@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>맛집 지도 — 또미</title>
 <meta name="description" content="또미 맛집 지도 — 카카오맵 기반 음식점 검색.">
+<meta name="theme-color" content="#F47920">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="또미">
+<meta property="og:title" content="또미 맛집 지도">
+<meta property="og:description" content="지역과 음식을 검색하면 주변 음식점을 또미 미식 점수 순으로 보여줍니다.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -49,7 +54,6 @@
     <div class="menu" id="menu">
       <a href="index.html">홈</a>
       <a href="about.html">또미 소개</a>
-      <a href="demo.html">고통지수 데모</a>
       <a href="map.html" class="active">맛집 지도</a>
       <a href="index.html#waitlist" class="cta">대기자 등록</a>
     </div>
@@ -75,8 +79,8 @@
       <span><i class="dot" style="background:#B8AE98"></i>3.5 미만</span>
     </div>
     <div id="keynotice" class="keynotice" style="display:none;">
-      <p>지도를 보려면 <b>카카오 지도 키</b>가 필요해요. 이 페이지(map.html)의 코드 맨 아래
-      <b>YOUR_KAKAO_JS_KEY</b> 부분에 발급받은 키를 넣어주세요. (발급 방법은 또미 가이드 참고)</p>
+      <p><b>지도를 잠시 불러올 수 없어요.</b><br>네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요.
+      계속 안 보이면 다른 브라우저에서 열어보시거나 <a href="index.html#waitlist" style="color:var(--accent-dark);text-decoration:underline;">베타 알림</a>을 신청해 주세요.</p>
     </div>
     <div class="results" id="results"></div>
     <p style="text-align:center; color:var(--muted); font-size:13px; margin-top:18px;">

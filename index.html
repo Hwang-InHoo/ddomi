@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>또미 — 또 가고 싶은 진짜 맛집</title>
 <meta name="description" content="광고와 조작에서 자유로운, 믿을 수 있는 맛집 평가. 또미.">
+<meta name="theme-color" content="#F47920">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="또미">
+<meta property="og:title" content="또미 — 또 가고 싶은 진짜 맛집">
+<meta property="og:description" content="광고와 조작에서 자유로운, 믿을 수 있는 맛집 평가.">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -43,7 +49,6 @@
     <div class="menu" id="menu">
       <a href="index.html" class="active">홈</a>
       <a href="about.html">또미 소개</a>
-      <a href="demo.html">고통지수 데모</a>
       <a href="map.html">맛집 지도</a>
       <a href="#waitlist" class="cta">베타 참여</a>
     </div>
@@ -51,16 +56,11 @@
 </nav>
 
 <!-- ============================================================= -->
-<!-- 섹션 1 · 히어로 (음식 사진 자동 슬라이드쇼 배경)                -->
+<!-- 섹션 1 · 히어로 (인터랙티브 캔버스 배경)                        -->
 <!-- ============================================================= -->
 <header class="hero">
-  <div class="hero-bg" aria-hidden="true">
-    <div class="slide s1"></div>
-    <div class="slide s2"></div>
-    <div class="slide s3"></div>
-    <div class="slide s4"></div>
-    <div class="hero-overlay"></div>
-  </div>
+  <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-inner">
     <span class="eyebrow anim d1">광고 없는 맛집 평가</span>
     <h1 class="anim d2">또 가고 싶은<br><span class="hl">진짜 맛집</span>만 남깁니다</h1>
@@ -78,7 +78,7 @@
 <div class="wrap">
   <section class="problems reveal">
     <h2 class="sec-title">이런 적, 있으시죠</h2>
-    <p class="sec-sub">지금의 맛집 찾기가 피고한 이유</p>
+    <p class="sec-sub">지금의 맛집 찾기가 피곤한 이유</p>
     <div class="grid">
       <div class="card"><div class="ic">★</div><h3>믿기 힘든 별점</h3><p>"너무 맛있어요"가 가득한데 막상 가보면 실망. 가짜 영수증 리뷰까지 거래되는 현실.</p></div>
       <div class="card"><div class="ic">📣</div><h3>광고인지 후기인지</h3><p>지도에도 인스타에도 광고가 섞여, 진짜 추천과 협찬을 구분하기 어렵습니다.</p></div>
@@ -141,6 +141,43 @@
       entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { threshold: 0.12 });
     els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // === 인터랙티브 히어로 배경 (브랜드 컬러 그라데이션 블롭 + 마우스 패럴랙스) ===
+  // 외부 라이브러리·이미지 없음. 모션축소·모바일에서는 정적 렌더로 폴백.
+  (function(){
+    var c = document.getElementById('heroCanvas'); if(!c || !c.getContext) return;
+    var ctx = c.getContext('2d');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var blobs = [
+      {x:0.25,y:0.30,r:0.55,col:'249,199,132'},
+      {x:0.75,y:0.24,r:0.50,col:'244,121,32'},
+      {x:0.60,y:0.75,r:0.62,col:'253,239,194'},
+      {x:0.18,y:0.80,r:0.46,col:'249,199,132'}
+    ];
+    var W=0,H=0,DPR=1,mx=0,my=0;
+    function size(){ DPR=Math.min(window.devicePixelRatio||1,2); W=c.clientWidth; H=c.clientHeight; c.width=Math.max(1,W*DPR); c.height=Math.max(1,H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); }
+    function draw(t){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#FFF6E4'; ctx.fillRect(0,0,W,H);
+      for(var i=0;i<blobs.length;i++){
+        var b=blobs[i];
+        var dx = reduce?0:Math.sin(t/3000 + i)*0.03;
+        var dy = reduce?0:Math.cos(t/3500 + i)*0.03;
+        var px = (b.x+dx+mx*0.02*(i%2?1:-1))*W;
+        var py = (b.y+dy+my*0.02*(i%2?-1:1))*H;
+        var rad = b.r*Math.max(W,H);
+        var g=ctx.createRadialGradient(px,py,0,px,py,rad);
+        g.addColorStop(0,'rgba('+b.col+',0.55)');
+        g.addColorStop(1,'rgba('+b.col+',0)');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      }
+    }
+    size(); window.addEventListener('resize', size);
+    if(reduce){ draw(0); return; }
+    var hero=document.querySelector('.hero');
+    if(hero){ hero.addEventListener('mousemove', function(e){ var r=hero.getBoundingClientRect(); mx=(e.clientX-r.left)/r.width-0.5; my=(e.clientY-r.top)/r.height-0.5; }); }
+    (function loop(t){ draw(t||0); requestAnimationFrame(loop); })();
   })();
 
   // === 베타 참여 폼 → 구글폼 ===
