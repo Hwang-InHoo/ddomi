@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>맛집 지도 — 또미</title>
+<meta name="description" content="또미 맛집 지도 — 카카오맵 기반 음식점 검색.">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+  .mapsearch{display:flex; gap:10px; max-width:680px; margin:0 auto 18px; flex-wrap:wrap;}
+  .mapsearch input{flex:1; min-width:200px; font-family:inherit; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:12px; outline:none;}
+  .mapsearch input:focus{border-color:var(--accent);}
+  #map{width:100%; height:460px; border-radius:18px; border:1px solid var(--line); overflow:hidden;}
+  .results{max-width:1040px; margin:16px auto 0; display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px;}
+  .place{background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; cursor:pointer;}
+  .place:hover{border-color:var(--accent);}
+  .place b{font-size:15px;} .place .cat{font-size:12px; color:#a99e80; margin:2px 0;}
+  .place .addr{font-size:12px; color:var(--muted);}
+  .place .badge{display:inline-block; margin-top:6px; background:var(--yellow); color:var(--accent-dark); font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;}
+  .keynotice{max-width:680px; margin:0 auto; background:var(--yellow); border:1px solid var(--line); border-radius:16px; padding:24px; text-align:center; color:var(--accent-dark);}
+  .keynotice b{color:var(--ink);}
+  /* 또미 미식 점수 마커(지도 위) — 점수 높을수록 크고 진한 주황 */
+  .ddomi-pin{font-weight:800; color:#fff; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.25); border:2px solid #fff; font-family:inherit; line-height:1;}
+  .ddomi-pin.t1{width:48px; height:48px; font-size:15px; background:var(--accent-dark);}
+  .ddomi-pin.t2{width:42px; height:42px; font-size:14px; background:var(--accent);}
+  .ddomi-pin.t3{width:35px; height:35px; font-size:13px; background:#F6A45C;}
+  .ddomi-pin.t4{width:30px; height:30px; font-size:12px; background:#B8AE98;}
+  /* 결과 카드 — 점수순 정렬, 상위 강조 */
+  .place .score{display:inline-flex; align-items:center; gap:4px; margin-top:6px; background:var(--accent); color:#fff; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px;}
+  .place.top{border-color:var(--accent); box-shadow:0 4px 14px rgba(244,121,32,.18);}
+  .place .rank{display:inline-block; margin-right:6px; color:var(--accent-dark); font-weight:800; font-size:13px;}
+  .place .rec{display:inline-block; margin-left:7px; font-size:11px; font-weight:700; color:var(--accent-dark); vertical-align:middle;}
+  .maplegend{max-width:1040px; margin:14px auto 0; display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--muted);}
+  .maplegend .dot{display:inline-block; width:13px; height:13px; border-radius:999px; margin-right:5px; vertical-align:middle;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="logo" href="index.html">
+      <svg class="logomark" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg>
+      <span class="brandtext">또미</span>
+    </a>
+    <button class="menu-toggle" aria-label="메뉴" onclick="document.getElementById('menu').classList.toggle('open')">☰</button>
+    <div class="menu" id="menu">
+      <a href="index.html">홈</a>
+      <a href="about.html">또미 소개</a>
+      <a href="demo.html">고통지수 데모</a>
+      <a href="map.html" class="active">맛집 지도</a>
+      <a href="index.html#waitlist" class="cta">대기자 등록</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="pagehead anim d1">
+    <h1>또미 맛집 지도</h1>
+    <p>지역과 음식을 검색하면 주변 음식점이 모두 표시됩니다. <b>또미 미식 점수</b>가 높은 곳일수록 크게·위에 노출돼요. (예: "부산 서면 맛집", "해운대 회")</p>
+  </header>
+
+  <section>
+    <div class="mapsearch anim d2">
+      <input type="text" id="kw" placeholder="검색어 입력 (예: 부산 서면 맛집)" value="부산 서면 맛집">
+      <button class="btn-primary" id="searchBtn">검색</button>
+    </div>
+    <div id="map" class="anim d3"></div>
+    <div class="maplegend" id="legend" style="display:none;">
+      <span><i class="dot" style="background:var(--accent-dark)"></i>4.5+ 강력추천</span>
+      <span><i class="dot" style="background:var(--accent)"></i>4.0–4.4 추천</span>
+      <span><i class="dot" style="background:#F6A45C"></i>3.5–3.9 보통</span>
+      <span><i class="dot" style="background:#B8AE98"></i>3.5 미만</span>
+    </div>
+    <div id="keynotice" class="keynotice" style="display:none;">
+      <p>지도를 보려면 <b>카카오 지도 키</b>가 필요해요. 이 페이지(map.html)의 코드 맨 아래
+      <b>YOUR_KAKAO_JS_KEY</b> 부분에 발급받은 키를 넣어주세요. (발급 방법은 또미 가이드 참고)</p>
+    </div>
+    <div class="results" id="results"></div>
+    <p style="text-align:center; color:var(--muted); font-size:13px; margin-top:18px;">
+      음식점 정보는 카카오맵에서 가져옵니다. 현재 표시되는 점수는 <b>베타 예시 점수</b>예요 —
+      미식가 평가가 쌓이면 실제 <b>또미 신뢰점수</b>로 바뀝니다.
+    </p>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="index.html"><svg class="logomark" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg><span class="brandtext">또미</span></a>
+    <div>또 가고 싶은 진짜 맛집 · DDOMI</div>
+  </div>
+</footer>
+
+<!-- ▼▼▼ 카카오 지도 키를 여기에 넣으세요 (YOUR_KAKAO_JS_KEY 자리) ▼▼▼ -->
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=45a46e443f189c4abb976da10bb57e65&libraries=services&autoload=false"></script>
+<script>
+  document.querySelectorAll('#menu a').forEach(function(a){ a.addEventListener('click', function(){ document.getElementById('menu').classList.remove('open'); }); });
+
+  // 또미 미식 점수(베타 예시): place.id로 3.0~4.9 사이 고정 산출.
+  // 같은 가게는 항상 같은 점수. 추후 실제 또미 신뢰점수 DB로 교체할 자리.
+  function ddomiScore(place){
+    var key = String(place.id || place.place_name || '');
+    var h = 2166136261;
+    for(var i=0;i<key.length;i++){ h ^= key.charCodeAt(i); h = (h*16777619) >>> 0; }
+    return Math.round((3.0 + (h % 190)/100) * 10) / 10; // 3.0 ~ 4.89
+  }
+  function tierOf(s){ return s>=4.5?'t1' : s>=4.0?'t2' : s>=3.5?'t3' : 't4'; }
+
+  function startMap(){
+    kakao.maps.load(function(){
+      var mapEl = document.getElementById('map');
+      var center = new kakao.maps.LatLng(35.1579, 129.0594); // 부산 서면 근처
+      var map = new kakao.maps.Map(mapEl, { center: center, level: 5 });
+      var ps = new kakao.maps.services.Places();
+      var infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+      var markers = [];
+      var resultsEl = document.getElementById('results');
+      var legendEl = document.getElementById('legend');
+      var collected = [];
+
+      function clearMarkers(){ markers.forEach(function(m){ m.setMap(null); }); markers = []; }
+
+      // 검색 시작 — 모든 페이지를 모아서 한 번에 렌더
+      function search(kw){
+        collected = [];
+        ps.keywordSearch(kw, onPage);
+      }
+
+      // 페이지 콜백: 결과를 누적하고, 다음 페이지가 있으면 계속 불러옴
+      function onPage(data, status, pagination){
+        if(status === kakao.maps.services.Status.OK){
+          collected = collected.concat(data);
+          if(pagination && pagination.hasNextPage){
+            pagination.nextPage();      // 다음 페이지 → onPage 재호출
+          } else {
+            renderAll(collected);       // 모든 페이지 수집 완료
+          }
+        } else if(status === kakao.maps.services.Status.ZERO_RESULT){
+          clearMarkers(); resultsEl.innerHTML = '';
+          legendEl.style.display = 'none';
+          resultsEl.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--muted);">검색 결과가 없습니다. 다른 검색어를 입력해 보세요.</p>';
+        } else {
+          resultsEl.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--muted);">검색 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.</p>';
+        }
+      }
+
+      function renderAll(places){
+        clearMarkers(); resultsEl.innerHTML = '';
+        // 또미 미식 점수 부여 후 높은 점수 순 정렬 → 노출 우선
+        places.forEach(function(p){ p._score = ddomiScore(p); });
+        places.sort(function(a,b){ return b._score - a._score; });
+
+        var bounds = new kakao.maps.LatLngBounds();
+        places.forEach(function(place, idx){
+          var score = place._score, tier = tierOf(score);
+          var pos = new kakao.maps.LatLng(place.y, place.x);
+          var addr = place.road_address_name || place.address_name || '';
+
+          var html = '<div style="padding:8px 10px; font-size:13px; max-width:230px; line-height:1.5;">'+
+            '<b>'+place.place_name+'</b><br>'+
+            '<span style="color:#999">'+place.category_name+'</span><br>'+ addr +
+            '<br><span style="display:inline-block;margin-top:6px;background:#F47920;color:#fff;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700">또미 미식 '+score.toFixed(1)+'</span>'+
+            '<span style="color:#a99e80;font-size:10.5px;margin-left:5px">베타 예시</span></div>';
+
+          // 지도 마커: 점수 높을수록 크고 진하게, 위(zIndex)로
+          var pin = document.createElement('div');
+          pin.className = 'ddomi-pin ' + tier;
+          pin.textContent = score.toFixed(1);
+          (function(p, m_html){ pin.addEventListener('click', function(){ infowindow.setContent(m_html); infowindow.setPosition(p); infowindow.open(map); }); })(pos, html);
+          var overlay = new kakao.maps.CustomOverlay({ position: pos, content: pin, yAnchor: 1, zIndex: Math.round(score*10) });
+          overlay.setMap(map);
+          markers.push(overlay);
+          bounds.extend(pos);
+
+          // 결과 카드: 점수순, 상위 3곳 강조 + 추천 표시
+          var top = idx < 3;
+          var card = document.createElement('div');
+          card.className = 'place' + (top ? ' top' : '');
+          card.innerHTML = '<b><span class="rank">'+(idx+1)+'.</span>'+place.place_name+(top?'<span class="rec">추천</span>':'')+'</b>'+
+            '<div class="cat">'+place.category_name+'</div>'+
+            '<div class="addr">'+addr+'</div>'+
+            '<span class="score">또미 미식 '+score.toFixed(1)+'</span>';
+          (function(p, c_html){ card.addEventListener('click', function(){ map.setLevel(3); map.panTo(p); infowindow.setContent(c_html); infowindow.setPosition(p); infowindow.open(map); window.scrollTo({top:0, behavior:'smooth'}); }); })(pos, html);
+          resultsEl.appendChild(card);
+        });
+
+        if(places.length){ map.setBounds(bounds); legendEl.style.display = 'flex'; }
+      }
+
+      document.getElementById('searchBtn').addEventListener('click', function(){ search(document.getElementById('kw').value.trim() || '맛집'); });
+      document.getElementById('kw').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ search(this.value.trim() || '맛집'); } });
+      search('부산 서면 맛집');
+    });
+  }
+
+  // 키가 정상 로드되면 지도 시작, 아니면 안내 표시
+  if (typeof kakao !== 'undefined' && kakao.maps) {
+    startMap();
+  } else {
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('keynotice').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
