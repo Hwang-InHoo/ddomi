@@ -8,11 +8,10 @@
 window.DDOMI_CONFIG = {
   VWORLD_KEY: "5722BAC8-9328-4BCC-B4E4-32B6D4B32AB3",
 
-  // 씨앗 미식가 모집 폼 (선택)
-  // 전용 구글폼을 만들어 아래를 채우면 이름·지역·소개까지 수집됩니다.
-  //   만드는 법: 구글폼 4문항(이름/이메일/활동지역/한마디) → '보내기 → 링크'의
-  //   form/d/e/<여기가_FORM_ID>/viewform, 각 문항의 entry.xxxx 를 넣으세요.
-  // 비워두면 이메일만 기존 대기자 폼으로 수집합니다(폴백 — 페이지는 그대로 작동).
-  REVIEWER_FORM_ID: "",
-  REVIEWER_ENTRY: { name: "", email: "", area: "", intro: "" }
+  // 씨앗 미식가 모집 폼 → Supabase(또미 소유 DB)로 접수 저장
+  // 신청 내역은 Supabase 대시보드 → Table Editor → ddomi_reviewers 에서 확인.
+  // (공개 키·URL은 공개돼도 안전 — RLS로 '등록만' 허용, 읽기는 차단)
+  SUPABASE_URL: "https://hdcmzlncwtmhmnfstokt.supabase.co",
+  SUPABASE_KEY: "sb_publishable_TFypc74O_8v6r0RpXnnyXg_WPcbS3mJ",
+  SUPABASE_TABLE: "ddomi_reviewers"
 };
