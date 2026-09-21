@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -18,26 +18,77 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 <style>
-  .mapsearch{display:flex; gap:10px; max-width:680px; margin:0 auto 12px; flex-wrap:wrap;}
-  .mapsearch input{flex:1; min-width:200px; font-family:inherit; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:12px; outline:none;}
-  .mapsearch input:focus{border-color:var(--accent);}
-  .countline{max-width:680px; margin:0 auto 14px; text-align:center; font-size:13px; color:var(--muted);}
-  .countline b{color:var(--accent-dark);}
-  #map{width:100%; height:480px; border-radius:18px; border:1px solid var(--line); overflow:hidden; background:#F3EEDF; z-index:0;}
-  .leaflet-container{font-family:inherit;}
-  .results{max-width:1040px; margin:16px auto 0; display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px;}
-  .place{background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; cursor:pointer;}
-  .place:hover{border-color:var(--accent);}
-  .place b{font-size:15px;} .place .cat{font-size:12px; color:#a99e80; margin:2px 0;}
-  .place .addr{font-size:12px; color:var(--muted);}
-  .place .pending{display:inline-block; margin-top:6px; background:var(--yellow); color:var(--accent-dark); font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px;}
-  .listnote{grid-column:1/-1; text-align:center; color:var(--muted); font-size:13px; padding:8px 0;}
-  .notice{max-width:680px; margin:0 auto; background:var(--yellow); border:1px solid var(--line); border-radius:16px; padding:22px 24px; text-align:center; color:var(--accent-dark); line-height:1.6;}
-  .notice b{color:var(--ink);}
-  .pop b{font-size:14px;} .pop .c{color:#999; font-size:12px;} .pop .a{font-size:12px; color:#555;}
-  .pop .p{display:inline-block; margin-top:6px; background:#FDEFC2; color:#D9650F; border-radius:999px; padding:2px 9px; font-size:11px; font-weight:700;}
-  .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:rgba(244,121,32,.25);}
-  .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:rgba(244,121,32,.85); color:#fff; font-family:inherit; font-weight:700;}
+  /* ===== 또미 맛집 지도 — 고급화 레이아웃 (site tone & manner) ===== */
+  :root{ --stick:130px;
+    --sh-sm:0 1px 2px rgba(120,80,30,.05), 0 6px 16px -10px rgba(120,70,20,.18);
+    --sh-md:0 10px 30px -16px rgba(120,70,20,.34); }
+  .tnum{font-variant-numeric:tabular-nums}
+  nav .inner{max-width:1200px}
+
+  /* compact page header */
+  .maphead{max-width:1200px; margin:0 auto; padding:26px 24px 14px}
+  .maphead h1{font-size:clamp(24px,3.2vw,32px); font-weight:800; letter-spacing:-.8px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .maphead h1 .tag{font-size:14px; color:var(--muted); font-weight:600}
+  .maphead p{color:var(--muted); font-size:15px; margin-top:8px; max-width:70ch}
+  .maphead .pills{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  .maphead .pill{font-size:12px; font-weight:700; color:var(--accent-dark); background:var(--yellow); border:1px solid color-mix(in srgb,var(--accent) 18%,transparent); padding:5px 12px; border-radius:999px; display:inline-flex; align-items:center; gap:5px}
+  .maphead .pill svg{width:12px;height:12px}
+
+  /* sticky filter bar */
+  .filterbar{position:sticky; top:59px; z-index:90; background:color-mix(in srgb,var(--bg) 92%,transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+  .filterbar .in{max-width:1200px; margin:0 auto; padding:12px 24px}
+  .frow{display:flex; gap:10px; align-items:center}
+  .searchbox{flex:1; min-width:0; display:flex; align-items:center; gap:9px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:0 14px; box-shadow:var(--sh-sm)}
+  .searchbox svg{color:var(--muted); flex:none}
+  .searchbox input{flex:1; min-width:0; border:none; outline:none; background:none; font-family:inherit; font-size:15px; color:var(--ink); padding:12px 0}
+  .searchbox input::placeholder{color:#b3a985}
+  .region{font-family:inherit; font-size:14px; font-weight:600; color:var(--ink); background:var(--surface); border:1px solid var(--line); padding:0 15px; height:44px; border-radius:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:var(--sh-sm); white-space:nowrap}
+  .region b{color:var(--accent-dark)} .region:hover{border-color:var(--accent)}
+  .chips{display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none; font-family:inherit; font-size:13px; font-weight:600; color:var(--muted); background:var(--surface); border:1px solid var(--line); padding:8px 15px; border-radius:999px; cursor:pointer; transition:.12s; display:inline-flex; align-items:center; gap:6px}
+  .chip:hover:not(.on){border-color:var(--accent); color:var(--accent-dark)}
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#fff}
+
+  /* app split */
+  .app{max-width:1200px; margin:0 auto; padding:18px 24px 40px; display:grid; grid-template-columns:1fr 452px; gap:22px; align-items:start}
+  .mapcol{position:sticky; top:var(--stick); height:calc(100dvh - var(--stick) - 20px); min-height:440px}
+  #map{position:relative; width:100%; height:100%; border-radius:20px; border:1px solid var(--line); overflow:hidden; background:#EEE5CF; box-shadow:var(--sh-md); z-index:0}
+  .leaflet-container{font-family:inherit; background:#EEE5CF}
+  .mapover{position:absolute; left:12px; top:12px; z-index:500; background:rgba(255,255,255,.94); backdrop-filter:blur(4px); border:1px solid var(--line); border-radius:12px; padding:9px 13px; box-shadow:var(--sh-sm); font-size:12.5px; color:var(--muted)}
+  .mapover b{color:var(--accent-dark); font-weight:800}
+  /* teardrop marker */
+  .ddmk{transition:transform .15s} .ddmk svg{display:block; filter:drop-shadow(0 5px 7px rgba(42,38,32,.28))}
+  .ddmk.active{transform:scale(1.4); z-index:1000!important}
+  .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:rgba(244,121,32,.25)}
+  .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:rgba(244,121,32,.9); color:#fff; font-family:inherit; font-weight:800}
+  .pop b{font-size:14px} .pop .c{color:#999; font-size:12px} .pop .a{font-size:12px; color:#555}
+  .pop .p{display:inline-block; margin-top:6px; background:#FDEFC2; color:#D9650F; border-radius:999px; padding:2px 9px; font-size:11px; font-weight:700}
+
+  /* list */
+  .listtop{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px}
+  .listtop .t{font-size:16px; font-weight:800} .listtop .t b{color:var(--accent-dark)}
+  .list{display:flex; flex-direction:column; gap:10px}
+  .place{display:flex; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:13px 14px; cursor:pointer; transition:transform .14s, box-shadow .14s, border-color .14s, background .14s}
+  .place:hover,.place.active{border-color:var(--accent); box-shadow:var(--sh-md); transform:translateY(-1px)}
+  .place.active{background:#FFFDF7}
+  .place .ico{width:44px;height:44px;border-radius:13px; background:var(--yellow); display:grid; place-items:center; font-size:21px; flex:none}
+  .place .body{flex:1; min-width:0}
+  .place .nm{font-size:15.5px; font-weight:700; letter-spacing:-.3px; line-height:1.3}
+  .place .sub{font-size:12.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .place .sub .cat{color:var(--accent-dark); font-weight:700}
+  .place .addr{font-size:12px; color:#a99e80; margin-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .place .pending{flex:none; align-self:center; background:var(--yellow); color:var(--accent-dark); font-size:11px; font-weight:800; padding:5px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap}
+  .place .pending .d{width:5px;height:5px;border-radius:50%; background:var(--accent)}
+  .listnote,.empty{text-align:center; color:var(--muted); font-size:13.5px; padding:16px 0}
+  .notice{margin-top:14px; background:var(--yellow); border:1px solid color-mix(in srgb,var(--accent) 18%,transparent); border-radius:14px; padding:16px 18px; color:var(--accent-dark); font-size:13.5px; line-height:1.6; text-align:center}
+  .notice b{color:var(--ink)}
+
+  @media (max-width:900px){
+    .app{grid-template-columns:1fr; padding-top:14px}
+    .mapcol{position:relative; top:0; height:340px; min-height:0; order:-1}
+    :root{--stick:0px}
+  }
 </style>
 </head>
 <body>
@@ -45,7 +96,7 @@
 <nav>
   <div class="inner">
     <a class="logo" href="index.html">
-      <svg class="logomark" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg>
+      <svg class="logomark" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"></path><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"></path></svg>
       <span class="brandtext">또미</span>
     </a>
     <button class="menu-toggle" aria-label="메뉴" onclick="document.getElementById('menu').classList.toggle('open')">☰</button>
@@ -59,31 +110,53 @@
   </div>
 </nav>
 
-<div class="wrap">
-  <header class="pagehead anim d1">
-    <h1>또미 맛집 지도 <span style="font-size:15px; color:var(--muted); font-weight:600;">· 부산 서면 파일럿</span></h1>
-    <p>공공데이터(소상공인시장진흥공단 상가정보)로 만든 <b>또미가 소유한</b> 음식점 지도입니다. 지도 배경은 국토부 <b>VWorld</b> — 광고도, 빌린 데이터도 없습니다.</p>
-  </header>
+<div class="maphead">
+  <h1>또미 맛집 지도 <span class="tag">· 부산 서면 파일럿</span></h1>
+  <p>공공데이터(소상공인시장진흥공단 상가정보)로 만든 <b style="color:var(--ink)">또미가 소유한</b> 음식점 지도. 배경은 국토부 VWorld — 광고도, 빌린 데이터도 없습니다.</p>
+  <div class="pills">
+    <span class="pill"><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>광고 0</span>
+    <span class="pill">공공데이터 기반</span>
+    <span class="pill">또미가 소유</span>
+    <span class="pill">다음은 당신의 동네</span>
+  </div>
+</div>
 
-  <section>
-    <div class="mapsearch anim d2">
-      <input type="text" id="kw" placeholder="가게 이름·업종 검색 (예: 돼지국밥, 카페, 초밥)">
-      <button class="btn-primary" id="searchBtn">검색</button>
+<div class="filterbar">
+  <div class="in">
+    <div class="frow">
+      <label class="searchbox">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input type="text" id="kw" placeholder="가게 이름·업종 검색 (예: 돼지국밥, 카페, 초밥)">
+      </label>
+      <button class="region" id="regionBtn" type="button">📍 <b>부산 서면</b> ▾</button>
     </div>
-    <div class="countline" id="countline"></div>
-    <div id="map" class="anim d3"></div>
-    <div id="notice" class="notice" style="display:none; margin-top:16px;"></div>
-    <div class="results" id="results"></div>
-    <p style="text-align:center; color:var(--muted); font-size:13px; margin-top:18px;">
-      음식점 목록은 <b>소상공인시장진흥공단 상가정보</b>(공공데이터, 또미 소유)이고 배경은 <b>VWorld</b>입니다.
-      아직 미식가 평가가 없어 모든 가게는 <b>"평가 준비중"</b>이에요 — 씨앗 미식가 평가가 쌓이면 <b>또미 신뢰점수</b>가 붙습니다.
-    </p>
-  </section>
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="mapcol">
+    <div id="map" aria-label="서면 음식점 지도">
+      <div class="mapover">서면 음식점 <b class="tnum" id="mapcount">—</b>곳</div>
+    </div>
+  </div>
+  <div class="listcol">
+    <div class="listtop">
+      <span class="t">서면 음식점 <b id="lc">—</b></span>
+      <select class="sortsel" id="sort" aria-label="정렬" style="font-family:inherit; font-size:13px; font-weight:600; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:7px 13px; cursor:pointer">
+        <option value="name">가나다순</option>
+        <option value="cat">업종별</option>
+      </select>
+    </div>
+    <div class="list" id="results"></div>
+    <div id="notice" class="notice" style="display:none"></div>
+    <div class="notice" id="pendingNote">아직 개별 <b>신뢰점수</b>는 없습니다. 지금은 <b>위치와 업종</b>만 — 곧 검증된 미식가들이 "또 갈 집"에 하나씩 불을 켤 예정이라, 모든 가게가 <b>평가 준비중</b>이에요.</div>
+  </div>
 </div>
 
 <footer>
   <div class="wrap">
-    <a class="logo" href="index.html"><svg class="logomark" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg><span class="brandtext">또미</span></a>
+    <a class="logo" href="index.html"><svg class="logomark" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"></path><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"></path></svg><span class="brandtext">또미</span></a>
     <div>또 가고 싶은 진짜 맛집 · DDOMI</div>
     <div style="margin-top:6px; font-size:13px;"><a href="privacy.html" style="color:var(--accent-dark);">개인정보처리방침</a></div>
   </div>
@@ -96,109 +169,164 @@
   document.querySelectorAll('#menu a').forEach(function(a){ a.addEventListener('click', function(){ document.getElementById('menu').classList.remove('open'); }); });
 
   var SEOMYEON = [35.1579, 129.0594];
-  var LIST_CAP = 120;
   var CFG = (window.DDOMI_CONFIG || {});
   var VKEY = CFG.VWORLD_KEY || "";
-  var noticeEl = document.getElementById('notice');
-  var resultsEl = document.getElementById('results');
-  var countEl = document.getElementById('countline');
-  var mapEl = document.getElementById('map');
 
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function showNotice(html){ noticeEl.innerHTML = html; noticeEl.style.display = 'block'; }
+  var els = {
+    kw: document.getElementById('kw'),
+    chips: document.getElementById('chips'),
+    results: document.getElementById('results'),
+    notice: document.getElementById('notice'),
+    pendingNote: document.getElementById('pendingNote'),
+    lc: document.getElementById('lc'),
+    mapcount: document.getElementById('mapcount'),
+    map: document.getElementById('map'),
+    sort: document.getElementById('sort'),
+    region: document.getElementById('regionBtn')
+  };
 
-  if(!VKEY){
-    mapEl.style.display = 'none';
-    showNotice('<b>지도를 준비하고 있어요.</b><br>공공데이터 기반 또미 지도를 곧 공개합니다. <a href="index.html#waitlist" style="color:var(--accent-dark);text-decoration:underline;">베타 알림</a>을 신청해 주세요.');
-  } else {
-    var map = L.map('map', { center: SEOMYEON, zoom: 15 });
-    L.tileLayer('https://api.vworld.kr/req/wmts/1.0.0/' + VKEY + '/Base/{z}/{y}/{x}.png', {
-      maxZoom: 19,
-      attribution: '지도 © <a href="https://www.vworld.kr">VWorld</a> · 데이터 © 소상공인시장진흥공단'
-    }).addTo(map);
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function showNotice(html){ els.notice.innerHTML = html; els.notice.style.display = 'block'; }
 
-    var cluster = L.markerClusterGroup ? L.markerClusterGroup({ maxClusterRadius: 55, chunkedLoading: true }) : null;
-    var byId = {};
-    var all = [];
-
-    function popupHtml(p){
-      return '<div class="pop"><b>'+esc(p.name)+'</b><br><span class="c">'+esc(p.category||'')+'</span><br>'+
-             '<span class="a">'+esc(p.roadAddr||p.addr||'')+'</span><br>'+
-             '<span class="p">평가 준비중 · 미식가 모집중</span></div>';
-    }
-
-    function buildMarkers(){
-      all.forEach(function(p){
-        if(typeof p.lat!=='number' || typeof p.lng!=='number') return;
-        var m = L.circleMarker([p.lat,p.lng], { radius:7, color:'#fff', weight:2, fillColor:'#F47920', fillOpacity:.95 });
-        m.bindPopup(popupHtml(p));
-        byId[p.id] = m;
-        if(cluster) cluster.addLayer(m); else m.addTo(map);
-      });
-      if(cluster) map.addLayer(cluster);
-    }
-
-    function renderList(list){
-      resultsEl.innerHTML = '';
-      if(!list.length){
-        resultsEl.innerHTML = '<p class="listnote">검색 결과가 없습니다. 다른 검색어를 입력해 보세요.</p>';
-        return;
-      }
-      var shown = list.slice(0, LIST_CAP);
-      shown.forEach(function(p){
-        var card = document.createElement('div');
-        card.className = 'place';
-        card.innerHTML = '<b>'+esc(p.name)+'</b><div class="cat">'+esc(p.category||'')+'</div>'+
-                         '<div class="addr">'+esc(p.roadAddr||p.addr||'')+'</div>'+
-                         '<span class="pending">평가 준비중</span>';
-        card.addEventListener('click', function(){
-          var m = byId[p.id];
-          map.setView([p.lat,p.lng], 18);
-          if(m){ if(cluster) cluster.zoomToShowLayer(m, function(){ m.openPopup(); }); else m.openPopup(); }
-          window.scrollTo({ top:0, behavior:'smooth' });
-        });
-        resultsEl.appendChild(card);
-      });
-      if(list.length > LIST_CAP){
-        var note = document.createElement('div');
-        note.className = 'listnote';
-        note.textContent = '…외 ' + (list.length - LIST_CAP) + '곳 더 있어요. 검색어를 좁히면 정확히 찾을 수 있어요. (지도에는 전부 표시돼 있어요)';
-        resultsEl.appendChild(note);
-      }
-    }
-
-    function search(kw){
-      kw = (kw||'').trim();
-      if(!kw){ renderList(all); setCount(all.length, null); return; }
-      var f = all.filter(function(p){
-        return (p.name&&p.name.indexOf(kw)>=0) || (p.category&&p.category.indexOf(kw)>=0) ||
-               (p.roadAddr&&p.roadAddr.indexOf(kw)>=0) || (p.dong&&p.dong.indexOf(kw)>=0);
-      });
-      renderList(f); setCount(all.length, f.length);
-    }
-
-    function setCount(total, matched){
-      if(matched==null) countEl.innerHTML = '서면 음식점 <b>'+total.toLocaleString()+'</b>곳 · 지도의 숫자를 누르면 펼쳐집니다';
-      else countEl.innerHTML = '검색 결과 <b>'+matched.toLocaleString()+'</b>곳 / 전체 '+total.toLocaleString()+'곳';
-    }
-
-    document.getElementById('searchBtn').addEventListener('click', function(){ search(document.getElementById('kw').value); });
-    document.getElementById('kw').addEventListener('keydown', function(e){ if(e.key==='Enter') search(this.value); });
-
-    fetch('data/restaurants.json', { cache:'no-cache' })
-      .then(function(r){ return r.ok ? r.json() : []; })
-      .then(function(data){
-        all = Array.isArray(data) ? data : (data.items||[]);
-        if(!all.length){
-          showNotice('<b>음식점 데이터를 준비하고 있어요.</b><br>곧 채워집니다. 조금만 기다려 주세요.');
-          return;
-        }
-        buildMarkers();
-        setCount(all.length, null);
-        renderList(all);
-      })
-      .catch(function(){ showNotice('<b>데이터를 불러오지 못했어요.</b><br>잠시 후 다시 시도해 주세요.'); });
+  // ----- category → group -----
+  var GROUPS = ['전체','국·탕·국밥','백반·한식','국수·면','곱창·구이','카페','주점','기타'];
+  var ICON = {'국·탕·국밥':'🍲','백반·한식':'🍚','국수·면':'🍜','곱창·구이':'🔥','카페':'☕','주점':'🍶','기타':'🍽️'};
+  function groupOf(cat){
+    cat = cat || '';
+    if(/국밥|국\/탕|탕|찌개|해장|곰탕|순대|국\s|설렁/.test(cat)) return '국·탕·국밥';
+    if(/한정식|백반|가정식|한식|정식|쌈밥/.test(cat)) return '백반·한식';
+    if(/국수|칼국수|냉면|밀면|면|우동|파스타|수제비/.test(cat)) return '국수·면';
+    if(/곱창|막창|구이|고기|갈비|삼겹|장어|불고기|족발|보쌈/.test(cat)) return '곱창·구이';
+    if(/카페|커피|디저트|베이커리|제과|빵|차/.test(cat)) return '카페';
+    if(/주점|호프|바|포차|유흥|술|이자카야|와인/.test(cat)) return '주점';
+    return '기타';
   }
+  function areaOf(addr){ var m = String(addr||'').match(/부산진구\s*([가-힣]+?)(로|대로|번길)/); return m ? m[1] : '서면'; }
+
+  var state = { group:'전체', q:'', sort:'name' };
+  var all = [], byId = {}, cardById = {};
+  var map = null, cluster = null;
+
+  // ----- chips -----
+  GROUPS.forEach(function(g,i){
+    var b = document.createElement('button');
+    b.className = 'chip' + (i===0?' on':''); b.type='button';
+    b.innerHTML = (ICON[g]?ICON[g]+' ':'') + g;
+    b.addEventListener('click', function(){
+      state.group = g;
+      Array.prototype.forEach.call(els.chips.children, function(x){ x.classList.toggle('on', x===b); });
+      render();
+    });
+    els.chips.appendChild(b);
+  });
+
+  // ----- map init -----
+  if(VKEY){
+    try{
+      map = L.map('map', { center: SEOMYEON, zoom: 15, zoomControl: true });
+      L.tileLayer('https://api.vworld.kr/req/wmts/1.0.0/' + VKEY + '/Base/{z}/{y}/{x}.png', {
+        maxZoom: 19,
+        attribution: '지도 © <a href="https://www.vworld.kr">VWorld</a> · 데이터 © 소상공인시장진흥공단'
+      }).addTo(map);
+      cluster = L.markerClusterGroup ? L.markerClusterGroup({ maxClusterRadius: 55, chunkedLoading: true }) : null;
+      if(cluster) map.addLayer(cluster);
+    }catch(e){ map = null; }
+  }
+  if(!map){
+    els.map.style.display = 'none';
+    showNotice('<b>지도를 준비하고 있어요.</b><br>공공데이터 기반 또미 지도를 곧 공개합니다. 아래 목록으로 먼저 둘러보세요.');
+  }
+
+  var PIN_SVG = '<svg width="28" height="28" viewBox="0 0 64 64"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg>';
+  function makeMarker(p){
+    var icon = L.divIcon({ className:'ddmk', html: PIN_SVG, iconSize:[28,28], iconAnchor:[14,28], popupAnchor:[0,-26] });
+    var m = L.marker([p.lat, p.lng], { icon: icon });
+    m.bindPopup('<div class="pop"><b>'+esc(p.name)+'</b><br><span class="c">'+esc(p.category||'')+'</span><br><span class="a">'+esc(p.roadAddr||p.addr||'')+'</span><br><span class="p">평가 준비중 · 미식가 모집중</span></div>');
+    return m;
+  }
+  function markerActive(id, on){
+    var m = byId[id]; if(!m) return; var el = m.getElement && m.getElement(); if(el) el.classList.toggle('active', !!on);
+  }
+
+  // ----- filter + render -----
+  function filtered(){
+    var q = state.q.trim();
+    var arr = all.filter(function(p){
+      var okG = state.group==='전체' || groupOf(p.category)===state.group;
+      var okQ = !q || (p.name&&p.name.indexOf(q)>=0) || (p.category&&p.category.indexOf(q)>=0) || (p.roadAddr&&p.roadAddr.indexOf(q)>=0) || (p.dong&&p.dong.indexOf(q)>=0);
+      return okG && okQ;
+    });
+    if(state.sort==='cat') arr.sort(function(a,b){ return (groupOf(a.category)+a.name).localeCompare(groupOf(b.category)+b.name,'ko'); });
+    else arr.sort(function(a,b){ return String(a.name).localeCompare(String(b.name),'ko'); });
+    return arr;
+  }
+
+  function render(){
+    var arr = filtered();
+    var totalTxt = (state.group==='전체' && !state.q.trim()) ? all.length.toLocaleString()+'곳' : arr.length.toLocaleString()+'곳';
+    els.lc.textContent = totalTxt;
+
+    // map markers (rebuild)
+    if(map && cluster){
+      cluster.clearLayers();
+      var layers = [];
+      arr.forEach(function(p){ if(typeof p.lat==='number' && typeof p.lng==='number' && byId[p.id]) layers.push(byId[p.id]); });
+      cluster.addLayers(layers);
+    }
+
+    // list (cap for DOM perf; map shows all filtered)
+    var CAP = 200;
+    els.results.innerHTML = '';
+    cardById = {};
+    if(!arr.length){ els.results.innerHTML = '<div class="empty">검색 결과가 없어요.<br>다른 이름이나 업종으로 찾아보세요.</div>'; return; }
+    arr.slice(0, CAP).forEach(function(p){
+      var g = groupOf(p.category);
+      var el = document.createElement('div'); el.className='place'; el.tabIndex=0;
+      el.innerHTML =
+        '<div class="ico">'+(ICON[g]||'🍽️')+'</div>'+
+        '<div class="body"><div class="nm">'+esc(p.name)+'</div>'+
+        '<div class="sub"><span class="cat">'+esc(p.category||'')+'</span><span class="area">📍 '+esc(areaOf(p.roadAddr||p.addr))+'</span></div>'+
+        '<div class="addr">'+esc(p.roadAddr||p.addr||'')+'</div></div>'+
+        '<span class="pending"><span class="d"></span>평가 준비중</span>';
+      el.addEventListener('mouseenter', function(){ markerActive(p.id, true); });
+      el.addEventListener('mouseleave', function(){ markerActive(p.id, false); });
+      el.addEventListener('click', function(){
+        if(map && byId[p.id]){
+          map.setView([p.lat,p.lng], 18);
+          var m = byId[p.id];
+          if(cluster && cluster.zoomToShowLayer){ cluster.zoomToShowLayer(m, function(){ m.openPopup(); }); }
+          else { m.openPopup(); }
+        }
+      });
+      els.results.appendChild(el);
+      cardById[p.id] = el;
+    });
+    if(arr.length > CAP){
+      var note = document.createElement('div'); note.className='listnote';
+      note.textContent = '…외 ' + (arr.length - CAP).toLocaleString() + '곳 더 있어요. 검색어나 업종을 좁혀보세요. (지도에는 전부 표시돼 있어요)';
+      els.results.appendChild(note);
+    }
+  }
+
+  // ----- events -----
+  els.kw.addEventListener('input', function(){ state.q = this.value; render(); });
+  els.sort.addEventListener('change', function(){ state.sort = this.value; render(); });
+  var REGIONS = ['부산 서면','서울 연남','대구 동성로','광주 충장로','대전 은행동'], ri = 0;
+  els.region.addEventListener('click', function(){ ri = (ri+1)%REGIONS.length; els.region.querySelector('b').textContent = REGIONS[ri]; });
+
+  // ----- data -----
+  fetch('data/restaurants.json', { cache:'no-cache' })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(data){
+      all = Array.isArray(data) ? data : (data.items || []);
+      if(!all.length){ showNotice('<b>음식점 데이터를 준비하고 있어요.</b><br>곧 채워집니다. 조금만 기다려 주세요.'); els.lc.textContent='0곳'; els.mapcount.textContent='0'; return; }
+      els.mapcount.textContent = all.length.toLocaleString();
+      if(map && cluster){
+        all.forEach(function(p){ if(typeof p.lat==='number' && typeof p.lng==='number'){ byId[p.id] = makeMarker(p); } });
+      }
+      render();
+    })
+    .catch(function(){ showNotice('<b>데이터를 불러오지 못했어요.</b><br>잠시 후 다시 시도해 주세요.'); });
 </script>
 
 </body>
