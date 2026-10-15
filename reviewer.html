@@ -81,8 +81,8 @@
       <label for="area">주로 다니는 지역</label>
       <input type="text" id="area" placeholder="예: 서면·전포·부전동">
 
-      <label for="intro">한마디 (선택)</label>
-      <textarea id="intro" placeholder="좋아하는 음식 종류, 왜 참여하고 싶은지 등 자유롭게"></textarea>
+      <label for="rvnote">한마디 (선택)</label>
+      <textarea id="rvnote" placeholder="좋아하는 음식 종류, 왜 참여하고 싶은지 등 자유롭게"></textarea>
 
       <label style="display:flex; gap:8px; align-items:flex-start; font-weight:500; margin-top:18px; font-size:14px; line-height:1.5;">
         <input type="checkbox" id="consent" style="width:auto; margin-top:3px; flex:none;">
@@ -124,7 +124,7 @@
     var name = document.getElementById('name').value.trim();
     var email = document.getElementById('email').value.trim();
     var area = document.getElementById('area').value.trim();
-    var intro = document.getElementById('intro').value.trim();
+    var intro = document.getElementById('rvnote').value.trim();
     if(!name){ fail('이름/활동명을 입력해 주세요.'); return; }
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ fail('올바른 이메일 주소를 입력해 주세요.'); return; }
     if(!document.getElementById('consent').checked){ fail('개인정보 수집·이용에 동의해 주세요.'); return; }
