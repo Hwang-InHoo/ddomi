@@ -133,9 +133,14 @@
 
     A.usernameAvailable(v).then(function(ok){
       if(ok === false) throw new Error("이미 사용 중인 아이디입니다.");
-      return A.client().from("ddomi_profiles").update({ username: v }).eq("id", me.user.id);
+      // 프로필 행이 없는 계정(트리거 생성 이전 가입분)에서도 저장되도록 upsert를 쓴다.
+      // 기존 행이면 UPDATE로 처리되어 is_admin 보호 트리거가 그대로 작동한다.
+      return A.client().from("ddomi_profiles")
+        .upsert({ id: me.user.id, username: v }, { onConflict: "id" })
+        .select("username");
     }).then(function(r){
       if(r && r.error) throw r.error;
+      if(!r || !r.data || !r.data.length) throw new Error("저장된 내용을 확인하지 못했습니다. 다시 시도해 주세요.");
       me.username = v;
       btn.disabled = false; btn.textContent = "아이디 저장";
       document.getElementById("whoami").innerHTML =
