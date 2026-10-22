@@ -14,5 +14,15 @@ window.DDOMI_CONFIG = {
   // 프로젝트: ddomi (wwmpszugglbpypsdaxsa, ap-northeast-2/서울) — 2026-09-15 캘린더 프로젝트에서 분리
   SUPABASE_URL: "https://wwmpszugglbpypsdaxsa.supabase.co",
   SUPABASE_KEY: "sb_publishable_zbpqvbsSnrEE9V5ypU29zg_1MzfyJX3",
-  SUPABASE_TABLE: "ddomi_reviewers"
+  SUPABASE_TABLE: "ddomi_reviewers",
+
+  // ── 구글 로그인 연동 스위치 ────────────────────────────────
+  // false인 동안에는 로그인/가입 화면에 구글 버튼이 "준비 중"으로만 표시되고 눌러도 아무 일도 없습니다.
+  // 아래 3단계를 마친 뒤 true로 바꾸면 그 즉시 동작합니다(페이지 수정 불필요).
+  //   1. Google Cloud Console → 사용자 인증 정보 → OAuth 클라이언트 ID(웹) 생성
+  //   2. 승인된 리디렉션 URI에 https://wwmpszugglbpypsdaxsa.supabase.co/auth/v1/callback 추가
+  //   3. Supabase → Authentication → Providers → Google 에 클라이언트 ID·시크릿 입력 후 활성화
+  //      (같은 화면 URL Configuration의 Site URL = https://ddomi.vercel.app,
+  //       Redirect URLs에 https://ddomi.vercel.app/** 추가)
+  GOOGLE_ENABLED: false
 };

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가입 — 또미</title>
+<meta name="description" content="또미 가입. 구글로 시작하거나 또미 아이디·비밀번호를 직접 만듭니다.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="in">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <div class="links"><a href="map.html">맛집 지도</a><a href="index.html#how">또미 소개</a></div>
+    <div class="sp"></div>
+    <div id="navauth"></div>
+  </div>
+</nav>
+
+<main class="auth-wrap">
+  <div class="card">
+    <h1 class="t">또미 가입</h1>
+    <p class="sub">구글로 시작해도 <b>또미에서 쓸 아이디와 비밀번호</b>를 함께 만듭니다. 평가에 쓰이는 이름이자, 구글 없이도 로그인할 수 있는 수단입니다.</p>
+
+    <button class="gbtn" id="gbtn" type="button"></button>
+
+    <div class="sep">또는 이메일로 직접 가입</div>
+
+    <form id="form" novalidate>
+      <label class="fl" for="email">이메일</label>
+      <input class="fi" id="email" type="email" autocomplete="email" placeholder="you@example.com">
+
+      <label class="fl" for="uid">또미 아이디</label>
+      <input class="fi" id="uid" type="text" autocomplete="username" placeholder="ddomi_user">
+      <p class="hint" id="uidhint">영문 소문자·숫자·밑줄(_) 3~20자. 평가에 표시되는 이름입니다.</p>
+
+      <label class="fl" for="pw">비밀번호</label>
+      <input class="fi" id="pw" type="password" autocomplete="new-password" placeholder="영문+숫자 8자 이상">
+
+      <label class="fl" for="pw2">비밀번호 확인</label>
+      <input class="fi" id="pw2" type="password" autocomplete="new-password" placeholder="한 번 더">
+
+      <p class="hint" style="margin-top:16px">
+        가입하시면 <a href="privacy.html" style="color:var(--main-deep);font-weight:700">개인정보처리방침</a>에 따라
+        이메일과 아이디가 처리됩니다. 저장 위치는 국내(서울) 서버입니다.
+      </p>
+
+      <button class="btn pri full" id="submit" type="submit" style="margin-top:16px">가입하기</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+
+    <p class="foot-links">이미 계정이 있으신가요? <a href="login.html">로그인</a></p>
+  </div>
+</main>
+
+<footer class="ft">
+  <div class="wrap-c">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <p class="fnote">또 가고 싶은 진짜 맛집만 남기는, 광고 없는 맛집 지도.</p>
+    <p class="copy">&copy; 2026 또미 · DDOMI · <a href="privacy.html">개인정보처리방침</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var A = window.DdomiAuth;
+  A.renderNavState("navauth");
+  A.wireGoogleButton("gbtn", "msg", "account.html");
+
+  var uid = document.getElementById("uid");
+  var uidhint = document.getElementById("uidhint");
+  var checkTimer = null;
+
+  uid.addEventListener("input", function(){
+    var v = uid.value.trim().toLowerCase();
+    uidhint.className = "hint";
+    uidhint.textContent = "영문 소문자·숫자·밑줄(_) 3~20자. 평가에 표시되는 이름입니다.";
+    if(checkTimer) clearTimeout(checkTimer);
+    if(!v) return;
+    var err = A.validateUsername(v);
+    if(err){ uidhint.className = "hint bad"; uidhint.textContent = err; return; }
+    checkTimer = setTimeout(function(){
+      A.usernameAvailable(v).then(function(ok){
+        if(ok === null){ return; }
+        uidhint.className = ok ? "hint ok" : "hint bad";
+        uidhint.textContent = ok ? "사용할 수 있는 아이디입니다." : "이미 사용 중인 아이디입니다.";
+      });
+    }, 350);
+  });
+
+  document.getElementById("form").addEventListener("submit", function(e){
+    e.preventDefault();
+    A.hideMsg("msg");
+
+    var email = document.getElementById("email").value.trim();
+    var u  = uid.value.trim().toLowerCase();
+    var pw = document.getElementById("pw").value;
+    var pw2= document.getElementById("pw2").value;
+    var btn= document.getElementById("submit");
+
+    if(!email || email.indexOf("@") < 0){ A.showMsg("msg","err","이메일을 정확히 입력해 주세요."); return; }
+    var ue = A.validateUsername(u);
+    if(ue){ A.showMsg("msg","err",ue); return; }
+    var pe = A.validatePassword(pw);
+    if(pe){ A.showMsg("msg","err",pe); return; }
+    if(pw !== pw2){ A.showMsg("msg","err","비밀번호가 서로 다릅니다."); return; }
+
+    btn.disabled = true;
+    btn.textContent = "가입하는 중…";
+
+    A.usernameAvailable(u).then(function(ok){
+      if(ok === false) throw new Error("이미 사용 중인 아이디입니다.");
+      return A.signUpWithEmail(email, pw, u);
+    }).then(function(r){
+      if(r && r.error) throw r.error;
+      var needConfirm = r && r.data && r.data.user && !r.data.session;
+      if(needConfirm){
+        A.showMsg("msg","ok","가입 확인 메일을 보냈습니다. 메일의 링크를 누르면 가입이 완료됩니다.");
+        btn.textContent = "메일을 확인해 주세요";
+        return;
+      }
+      window.location.href = "account.html";
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = "가입하기";
+      var m = (err && err.message) ? err.message : "가입에 실패했습니다.";
+      if(/already registered|already been registered/i.test(m)) m = "이미 가입된 이메일입니다. 로그인해 주세요.";
+      if(/duplicate key|ddomi_profiles_username_key/i.test(m)) m = "이미 사용 중인 아이디입니다.";
+      if(/Password should be/i.test(m)) m = "비밀번호가 조건을 만족하지 않습니다(영문+숫자 8자 이상).";
+      if(/Failed to fetch|NetworkError/i.test(m)) m = "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+      A.showMsg("msg","err", m);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

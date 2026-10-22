@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>관리자 — 또미</title>
+<meta name="description" content="또미 관리자 전용 화면.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="auth.css">
+<style>
+  .tabs{display:flex; gap:8px; margin:0 0 24px; flex-wrap:wrap}
+  .tab{font:inherit; font-weight:700; font-size:.92rem; padding:11px 20px; border-radius:12px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--main); color:#fff; border-color:var(--main)}
+  .panel[hidden]{display:none}
+
+  .res{background:#fff; border:2px solid var(--main); border-radius:20px; padding:24px; margin:0 0 16px;
+    box-shadow:0 10px 20px -8px rgba(244,121,32,.4)}
+  .res-top{display:flex; gap:24px; align-items:center; flex-wrap:wrap}
+  .res-cap{font-size:.8rem; color:var(--muted); margin:0 0 4px}
+  .res-num{font-size:2.6rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums}
+  .res-side{flex:1; min-width:200px}
+  .res-lab{display:inline-block; font-size:.78rem; font-weight:800; padding:4px 12px; border-radius:999px;
+    background:var(--tint); color:var(--main-deep); margin:0 0 8px}
+  .track{height:12px; border-radius:999px; background:var(--sunken); border:1px solid var(--line); overflow:hidden}
+  .fill{height:100%; width:50%; border-radius:999px; background:var(--main); transition:width .15s}
+  .res-int{font-size:.88rem; line-height:1.6; color:var(--soft); margin:12px 0 0}
+
+  .warnbox{background:var(--ink); color:#FFFCF2; border-radius:16px; padding:16px 24px; margin:0 0 24px;
+    font-size:.88rem; line-height:1.6}
+  .warnbox b{color:var(--main)}
+
+  .ax{background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; margin:0 0 16px}
+  .ax-h{display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:0 0 4px}
+  .ax-no{font-size:.78rem; font-weight:800; color:var(--main-deep)}
+  .ax-n{font-size:1.1rem; font-weight:700; margin:0}
+  .ax-q{font-size:.86rem; color:var(--muted); margin:0 0 16px}
+  .fact{background:var(--sunken); border-radius:12px; padding:16px; margin:0 0 16px}
+  .fact-b{font-size:1.9rem; font-weight:800; line-height:1.15; font-variant-numeric:tabular-nums}
+  .fact-u{font-size:1rem; font-weight:700; color:var(--soft)}
+  .fact-s{font-size:.86rem; line-height:1.6; color:var(--soft); margin:8px 0 0}
+  .bad{color:var(--main-deep); font-weight:700}
+
+  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:0 0 8px}
+  .row label{font-size:.86rem; font-weight:700; width:148px}
+  .row input[type=range]{flex:1; min-width:140px; accent-color:var(--main)}
+  .row .v{font-size:.86rem; font-weight:700; width:48px; text-align:right; font-variant-numeric:tabular-nums}
+
+  .srcbtn{background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 16px;
+    font:inherit; font-size:.8rem; font-weight:700; color:var(--main-deep); cursor:pointer; margin:8px 0 0}
+  .srcbtn:hover{background:var(--tint)}
+  .src{display:none; border-top:1px solid var(--line); margin:16px 0 0; padding:16px 0 0}
+  .src.open{display:block}
+  .src dl{margin:0; font-size:.86rem; line-height:1.6}
+  .src dt{font-weight:700; color:var(--main-deep); margin:12px 0 0}
+  .src dt:first-child{margin:0}
+  .src dd{margin:0; color:var(--soft)}
+
+  .note{background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; margin:24px 0 0}
+  .note h3{font-size:1rem; margin:0 0 12px}
+  .note ul{margin:0; padding:0 0 0 24px; font-size:.86rem; line-height:1.6; color:var(--soft)}
+  .note li{margin:0 0 8px}
+  .meta{font-size:.8rem; color:var(--muted); margin:24px 0 0; line-height:1.6}
+
+  @media (max-width:640px){
+    .res-num{font-size:2.1rem}
+    .row label{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){ .fill{transition:none} }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="in">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <div class="links"><a href="map.html">맛집 지도</a><a href="index.html#how">또미 소개</a><a href="account.html">내 계정</a></div>
+    <div class="sp"></div>
+    <div id="navauth"></div>
+  </div>
+</nav>
+
+<main class="page-wrap">
+
+  <div id="gate" hidden></div>
+
+  <div id="content" hidden>
+
+    <h1 class="t">관리자 화면<span class="adm-badge">관리자 전용</span></h1>
+    <p class="sub">이 화면의 두 도구는 일반 방문자에게 노출되지 않습니다.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-evi" role="tab" aria-selected="true" aria-controls="p-evi">고통지수 근거판</button>
+      <button class="tab" id="tab-cls" role="tab" aria-selected="false" aria-controls="p-cls">아이템 분류기</button>
+    </div>
+
+    <!-- ══════════ 1. 근거판 ══════════ -->
+    <section class="panel" id="p-evi" role="tabpanel" aria-labelledby="tab-evi">
+
+      <div class="res" aria-live="polite">
+        <div class="res-top">
+          <div>
+            <p class="res-cap">당신이 매긴 점수</p>
+            <div class="res-num" id="e-score">5.0</div>
+          </div>
+          <div class="res-side">
+            <span class="res-lab" id="e-label">보통</span>
+            <div class="track"><div class="fill" id="e-fill"></div></div>
+          </div>
+        </div>
+        <p class="res-int" id="e-interp">슬라이더가 전부 중립(5점 · 가중치 균등)에 있습니다. 아래 다섯 항목의 실측치를 보고 직접 움직여 보세요.</p>
+      </div>
+
+      <p class="warnbox">
+        <b>이 점수는 또미의 주장이 아닙니다.</b> 또미가 제공하는 것은 아래 다섯 항목의 <b>실측치와 출처</b>뿐이고,
+        점수와 가중치는 전부 보는 사람의 입력값입니다. 기본값도 미리 정해 둔 값이 아니라 전부 중립(5 · 균등)입니다.
+        이 화면에서 나온 숫자를 "또미의 조사 결과"로 인용하지 마십시오.
+      </p>
+
+      <section class="ax">
+        <div class="ax-h"><span class="ax-no">항목 1</span><h2 class="ax-n">노출 규모</h2></div>
+        <p class="ax-q">이 불편을 겪을 수 있는 사람이 얼마나 되는가</p>
+        <div class="fact">
+          <div><span class="fact-b">74,980</span> <span class="fact-u">회 / 월</span></div>
+          <p class="fact-s">"서면맛집" 검색 횟수(최근 30일). 또미가 현재 커버하는 지역입니다.<br>
+            같은 기준으로 "부산맛집" 88,300회, "맛집" 682,800회. 모바일 비중 85~95%.</p>
+        </div>
+        <div class="row"><label for="es0">이 항목은 몇 점?</label><input type="range" id="es0" min="0" max="10" step="1" value="5"><span class="v" id="ev0">5</span></div>
+        <div class="row"><label for="ew0">얼마나 중요?</label><input type="range" id="ew0" min="0" max="10" step="1" value="5"><span class="v" id="ex0">5</span></div>
+        <button class="srcbtn" type="button" data-src="esrc0" aria-expanded="false">이 숫자 어디서 왔는지 보기</button>
+        <div class="src" id="esrc0"><dl>
+          <dt>원천</dt><dd>네이버 검색광고 키워드도구 (절대 검색수)</dd>
+          <dt>조회 시점</dt><dd>2026-10-22 조회 · 최근 30일 실제 검색 횟수</dd>
+          <dt>조회 조건</dt><dd>키워드 "서면맛집" / "부산맛집" / "맛집", PC·모바일 합계</dd>
+          <dt>한계</dt><dd>검색한 <b>사람 수가 아니라 검색 횟수</b>입니다. 한 사람이 여러 번 검색하면 중복으로 셉니다.
+            "맛집을 검색했다"가 곧 "정보를 믿지 못했다"는 뜻도 아닙니다 — 규모만 보여주며, 불신의 흔적은 항목 2입니다.</dd>
+        </dl></div>
+      </section>
+
+      <section class="ax">
+        <div class="ax-h"><span class="ax-no">항목 2</span><h2 class="ax-n">회피 행동</h2></div>
+        <p class="ax-q">광고성 후기를 피하려고 실제로 무언가를 하는 사람이 있는가</p>
+        <div class="fact">
+          <div><span class="fact-b">9,710</span> <span class="fact-u">회 / 월</span></div>
+          <p class="fact-s">"내돈내산" 검색 횟수(최근 30일). 모바일이 8,430회로 87%입니다.<br>
+            비교: "뒷광고" 430회, "솔직후기" 60회. "리뷰조작"은 10회 미만이라 <b>미확인</b>으로 둡니다.</p>
+        </div>
+        <div class="row"><label for="es1">이 항목은 몇 점?</label><input type="range" id="es1" min="0" max="10" step="1" value="5"><span class="v" id="ev1">5</span></div>
+        <div class="row"><label for="ew1">얼마나 중요?</label><input type="range" id="ew1" min="0" max="10" step="1" value="5"><span class="v" id="ex1">5</span></div>
+        <button class="srcbtn" type="button" data-src="esrc1" aria-expanded="false">이 숫자 어디서 왔는지 보기</button>
+        <div class="src" id="esrc1"><dl>
+          <dt>원천</dt><dd>네이버 검색광고 키워드도구 (절대 검색수)</dd>
+          <dt>조회 시점</dt><dd>2026-10-22 조회 · 최근 30일 실제 검색 횟수</dd>
+          <dt>왜 이 키워드인가</dt><dd>"내돈내산"은 대가를 받지 않았음을 밝히는 말입니다. 이 말을 검색한다는 것은
+            광고성 후기를 걸러내려는 행동으로 읽을 수 있습니다.</dd>
+          <dt>한계</dt><dd>월간 검색수가 10회 미만이면 제공처가 실제 값을 주지 않아 "미확인"으로 남겼습니다(0이 아닙니다).
+            "내돈내산"은 화장품·가전 등 다른 분야에도 쓰이므로 <b>전부 맛집 관련이라고 볼 수 없습니다.</b></dd>
+        </dl></div>
+      </section>
+
+      <section class="ax">
+        <div class="ax-h"><span class="ax-no">항목 3</span><h2 class="ax-n">지속성</h2></div>
+        <p class="ax-q">한때의 화제였는가, 아직 남아 있는 문제인가</p>
+        <div class="fact">
+          <div><span class="fact-b">100 &rarr; 36.6</span></div>
+          <p class="fact-s">"내돈내산" 검색 추세 지수입니다(2021-01 최고 100 → 2026-09 36.6).
+            "뒷광고"는 같은 기간 50.3 → 2.1로 더 크게 떨어졌습니다.<br>
+            <span class="bad">⚠️ 이 항목은 또미에 불리한 데이터입니다.</span>
+            "문제가 커지고 있다"는 주장은 이 수치로 뒷받침되지 않습니다. 관심은 2021년 뒷광고 사태 때가 정점이었고
+            이후 계속 식었습니다. 다만 관심이 식은 뒤에도 회피 행동(항목 2)은 월 9,710회로 남아 있습니다.</p>
+        </div>
+        <div class="row"><label for="es2">이 항목은 몇 점?</label><input type="range" id="es2" min="0" max="10" step="1" value="5"><span class="v" id="ev2">5</span></div>
+        <div class="row"><label for="ew2">얼마나 중요?</label><input type="range" id="ew2" min="0" max="10" step="1" value="5"><span class="v" id="ex2">5</span></div>
+        <button class="srcbtn" type="button" data-src="esrc2" aria-expanded="false">이 숫자 어디서 왔는지 보기</button>
+        <div class="src" id="esrc2"><dl>
+          <dt>원천</dt><dd>네이버 데이터랩 검색어 트렌드</dd>
+          <dt>조회 시점</dt><dd>2026-10-22 조회</dd>
+          <dt>조회 조건</dt><dd>키워드 "내돈내산" / "뒷광고", 기간 2021-01-01 ~ 2026-09-30, 월 단위, 성별·연령 전체</dd>
+          <dt>한계</dt><dd>이 값은 검색 <b>횟수가 아니라 조회 기간 내 최댓값을 100으로 둔 상대 지수</b>입니다.
+            절대 건수로 인용할 수 없고, 조회 기간을 바꾸면 값도 바뀝니다. 국내 네이버 검색 기반이라 해외 동향은 반영하지 못합니다.</dd>
+        </dl></div>
+      </section>
+
+      <section class="ax">
+        <div class="ax-h"><span class="ax-no">항목 4</span><h2 class="ax-n">제도적 인정</h2></div>
+        <p class="ax-q">공적으로 제재 대상이 되어 온 문제인가</p>
+        <div class="fact">
+          <div><span class="fact-b">3</span> <span class="fact-u">건 — 확인된 제재·개정 전례</span></div>
+          <p class="fact-s">
+            ① 2026-07 공정거래위원회, 경제적 이해관계를 밝히지 않은 후기로 성형외과 3곳에 시정·공표명령<br>
+            ② 2020-06 공정거래위원회, 후기 노출 순서를 조작한 SNS 쇼핑몰 7곳에 전자상거래법 위반 과태료 총 3,300만원<br>
+            ③ 2026-03-25 공정거래위원회 표시광고법 시행령·과징금고시 개정안 발표(반복 위반 가중 한도 상향)</p>
+        </div>
+        <div class="row"><label for="es3">이 항목은 몇 점?</label><input type="range" id="es3" min="0" max="10" step="1" value="5"><span class="v" id="ev3">5</span></div>
+        <div class="row"><label for="ew3">얼마나 중요?</label><input type="range" id="ew3" min="0" max="10" step="1" value="5"><span class="v" id="ex3">5</span></div>
+        <button class="srcbtn" type="button" data-src="esrc3" aria-expanded="false">이 숫자 어디서 왔는지 보기</button>
+        <div class="src" id="esrc3"><dl>
+          <dt>원천</dt><dd>공정거래위원회 제재·개정 사례 (언론 보도로 확인)</dd>
+          <dt>보조 자료</dt><dd>1372 소비자상담 상세현황(공정거래위원회, data.go.kr) — 2026년 8월 전체 상담 52,135건.
+            그중 표본 300건을 조회했을 때 "표시·광고" 분류가 12건(4%)이었습니다.</dd>
+          <dt>조회 시점</dt><dd>2026-10-22 조회 (1372는 등록년월 202608, 1페이지 300건 기준)</dd>
+          <dt>한계</dt><dd>1372의 "표시·광고" 분류는 <b>전 품목 대상</b>이며 음식점·맛집 후기로 특정되지 않습니다.
+            52,135건 중 300건만 본 <b>표본</b>이라 4%를 전체 비율로 단정할 수 없습니다. 제재 전례 3건도 음식점이 아닌
+            업종(성형외과·쇼핑몰) 사례이며, 후기의 이해관계 표시가 규제 영역에서 다뤄져 왔다는 <b>방향성</b>까지만 보여줍니다.</dd>
+        </dl></div>
+      </section>
+
+      <section class="ax">
+        <div class="ax-h"><span class="ax-no">항목 5</span><h2 class="ax-n">대안 부재</h2></div>
+        <p class="ax-q">이미 있는 서비스가 이 문제를 해결해 주었는가</p>
+        <div class="fact">
+          <div><span class="fact-b">0</span> <span class="fact-u">곳 — 확인한 11곳 중</span></div>
+          <p class="fact-s">네이버 지도 · 카카오맵 · 구글 지도 · 다이닝코드 · 식신 · 블루리본서베이 · 캐치테이블 ·
+            망고플레이트(종료) · 당근 · 타베로그 · 옐프를 같은 기준으로 확인한 결과,
+            <b>가게 하나하나의 점수가 어디서 나왔는지 열어 보여주는 곳은 없었습니다.</b><br>
+            구글은 플랫폼 전체의 조작 방어 통계를 공개하지만 개별 가게 점수의 출처는 열지 않고,
+            다이닝코드는 광고성 글을 걸러낸 뒤 랭킹만 보여주며 무엇을 걸렀는지는 공개하지 않습니다.</p>
+        </div>
+        <div class="row"><label for="es4">이 항목은 몇 점?</label><input type="range" id="es4" min="0" max="10" step="1" value="5"><span class="v" id="ev4">5</span></div>
+        <div class="row"><label for="ew4">얼마나 중요?</label><input type="range" id="ew4" min="0" max="10" step="1" value="5"><span class="v" id="ex4">5</span></div>
+        <button class="srcbtn" type="button" data-src="esrc4" aria-expanded="false">이 숫자 어디서 왔는지 보기</button>
+        <div class="src" id="esrc4"><dl>
+          <dt>원천</dt><dd>또미 자체 조사 — 11개 서비스를 6개 기준으로 대조</dd>
+          <dt>조회 시점</dt><dd>2026-10-21 작성</dd>
+          <dt>한계</dt><dd>공식 자료를 찾지 못한 항목은 "미확인"으로 남기고 추정으로 채우지 않았습니다.
+            "0곳"은 <b>"확인한 11곳 중 그런 곳을 찾지 못했다"</b>는 뜻이며 "국내 유일"이라는 주장이 아닙니다.
+            네이버는 2026-04 별점을 재도입해 2026-07부터 노출하고 있습니다(평균은 별점 리뷰어 10명 이상이고
+            사업자가 공개를 켠 경우에만 표시).</dd>
+        </dl></div>
+      </section>
+
+      <div class="note">
+        <h3>이 화면이 하는 일</h3>
+        <ul>
+          <li>또미가 주는 것은 <b>실측치와 출처</b>입니다. 점수 · 가중치 · 결론은 보는 사람의 것입니다.</li>
+          <li>숫자마다 <b>원천 · 조회 시점 · 조회 조건 · 한계</b>를 열어 둡니다.</li>
+          <li>또미에 <b>불리한 데이터(항목 3)도 그대로 둡니다.</b></li>
+          <li>확인되지 않은 값은 추정으로 채우지 않고 <b>"미확인"</b>으로 표시합니다.</li>
+        </ul>
+        <p class="meta">모든 수치는 2026-10-22 조회분이며, 원천 데이터가 갱신되면 값이 달라집니다.</p>
+      </div>
+    </section>
+
+    <!-- ══════════ 2. 아이템 분류기 ══════════ -->
+    <section class="panel" id="p-cls" role="tabpanel" aria-labelledby="tab-cls" hidden>
+
+      <p class="warnbox">
+        <b>내부 판단 도구입니다.</b> 사업 아이템 후보를 다섯 항목으로 매겨 보는 계산기이며,
+        값은 전부 직접 넣는 주관 입력입니다. <b>여기서 나온 숫자는 대외 자료·심사서류에 근거로 쓰지 않습니다.</b>
+        바깥에 내보낼 근거가 필요하면 "고통지수 근거판" 탭의 실측치를 쓰십시오.
+      </p>
+
+      <div class="res" aria-live="polite">
+        <div class="res-top">
+          <div>
+            <p class="res-cap">고통지수</p>
+            <div class="res-num" id="c-score">5.0</div>
+          </div>
+          <div class="res-side">
+            <span class="res-lab" id="c-label">보통</span>
+            <div class="track"><div class="fill" id="c-fill"></div></div>
+          </div>
+        </div>
+        <p class="res-int" id="c-interp">틈새는 있으나 차별화가 없으면 매출 검증이 어렵습니다.</p>
+      </div>
+
+      <div class="ax" id="c-rows"></div>
+
+      <div class="note">
+        <h3>계산 방식</h3>
+        <ul>
+          <li>가중합입니다 — 빈도 0.25 · 심각도 0.25 · 대안 부재 0.20 · 비용·손실 0.15 · 감정 스트레스 0.15</li>
+          <li>구간 해석: 3 미만 낮음 / 5.5 미만 보통 / 7.5 미만 높음 / 7.5 이상 매우 높음</li>
+          <li>입력이 주관이라 <b>같은 아이템도 사람마다 다른 값이 나옵니다.</b> 후보 사이 우선순위를 가늠하는 용도로만 씁니다.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="ft">
+  <div class="wrap-c">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <p class="fnote">또 가고 싶은 진짜 맛집만 남기는, 광고 없는 맛집 지도.</p>
+    <p class="copy">&copy; 2026 또미 · DDOMI · 관리자 화면</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var A = window.DdomiAuth;
+  A.renderNavState("navauth");
+
+  A.requireAdmin("content", "gate").then(function(me){
+    if(!me) return;
+    initTabs();
+    initEvidence();
+    initClassifier();
+  });
+
+  function initTabs(){
+    var tabs = [
+      { btn: document.getElementById("tab-evi"), panel: document.getElementById("p-evi") },
+      { btn: document.getElementById("tab-cls"), panel: document.getElementById("p-cls") }
+    ];
+    tabs.forEach(function(t){
+      t.btn.addEventListener("click", function(){
+        tabs.forEach(function(o){
+          var on = (o === t);
+          o.btn.setAttribute("aria-selected", on ? "true" : "false");
+          o.panel.hidden = !on;
+        });
+      });
+    });
+  }
+
+  /* ── 근거판 ── */
+  function initEvidence(){
+    var N = 5;
+    function update(){
+      var num = 0, den = 0, touched = false;
+      for(var i = 0; i < N; i++){
+        var s = +document.getElementById("es" + i).value;
+        var w = +document.getElementById("ew" + i).value;
+        document.getElementById("ev" + i).textContent = s;
+        document.getElementById("ex" + i).textContent = w;
+        if(s !== 5 || w !== 5) touched = true;
+        num += s * w; den += w;
+      }
+      var score = den === 0 ? 0 : num / den;
+      document.getElementById("e-score").textContent = score.toFixed(1);
+      document.getElementById("e-fill").style.width = Math.round(score * 10) + "%";
+
+      var name = den === 0 ? "가중치 0"
+        : score < 3 ? "낮음" : score < 5.5 ? "보통" : score < 7.5 ? "높음" : "매우 높음";
+      document.getElementById("e-label").textContent = name;
+
+      var el = document.getElementById("e-interp");
+      if(den === 0){
+        el.textContent = "모든 항목의 중요도를 0으로 두면 점수를 만들 수 없습니다. 하나 이상을 올려 보세요.";
+      } else if(!touched){
+        el.textContent = "슬라이더가 전부 중립(5점 · 가중치 균등)에 있습니다. 아래 다섯 항목의 실측치를 보고 직접 움직여 보세요.";
+      } else {
+        el.textContent = "당신이 매긴 점수는 " + score.toFixed(1) + "점(" + name + ")입니다. 같은 실측치를 보고도 사람마다 다른 점수가 나옵니다 — 그래서 또미는 이 숫자를 대신 정해 드리지 않습니다.";
+      }
+    }
+    for(var i = 0; i < N; i++){
+      document.getElementById("es" + i).addEventListener("input", update);
+      document.getElementById("ew" + i).addEventListener("input", update);
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".srcbtn"), function(btn){
+      btn.addEventListener("click", function(){
+        var panel = document.getElementById(btn.getAttribute("data-src"));
+        var open = panel.classList.toggle("open");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.textContent = open ? "출처 닫기" : "이 숫자 어디서 왔는지 보기";
+      });
+    });
+    update();
+  }
+
+  /* ── 아이템 분류기 (기존 demo.html 로직 보존) ── */
+  function initClassifier(){
+    var dims = [
+      { label: "빈도",        hint: "얼마나 자주 겪나",   w: 0.25, v: 5 },
+      { label: "심각도",      hint: "불편의 강도",        w: 0.25, v: 5 },
+      { label: "대안 부재",   hint: "해결책이 없을수록",  w: 0.20, v: 5 },
+      { label: "비용·손실",   hint: "돈·시간 손실",       w: 0.15, v: 5 },
+      { label: "감정 스트레스", hint: "짜증·불안 정도",   w: 0.15, v: 5 }
+    ];
+    var box = document.getElementById("c-rows");
+    dims.forEach(function(d, i){
+      var row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        '<label for="cs' + i + '">' + d.label +
+        ' <span style="display:block;font-size:.76rem;font-weight:400;color:var(--muted)">' + d.hint +
+        ' · 가중치 ' + d.w + '</span></label>' +
+        '<input type="range" id="cs' + i + '" min="0" max="10" step="1" value="' + d.v + '">' +
+        '<span class="v" id="cv' + i + '">' + d.v + '</span>';
+      box.appendChild(row);
+      row.querySelector("input").addEventListener("input", function(e){
+        d.v = +e.target.value;
+        document.getElementById("cv" + i).textContent = d.v;
+        update();
+      });
+    });
+
+    function update(){
+      var raw = dims.reduce(function(s, d){ return s + d.v * d.w; }, 0);
+      var score = Math.round(raw * 10) / 10;
+      document.getElementById("c-score").textContent = score.toFixed(1);
+      document.getElementById("c-fill").style.width = Math.round(score * 10) + "%";
+
+      var name, msg;
+      if(score < 3){ name = "낮음"; msg = "지불 의향이 낮아 사업화 우선순위가 떨어집니다."; }
+      else if(score < 5.5){ name = "보통"; msg = "틈새는 있으나 차별화가 없으면 매출 검증이 어렵습니다."; }
+      else if(score < 7.5){ name = "높음"; msg = "해결 시 돈을 낼 가능성이 큽니다 — MVP 검증 후보입니다."; }
+      else { name = "매우 높음"; msg = "강한 페인포인트 — 빠르게 수요 검증할 1순위 기회입니다."; }
+
+      document.getElementById("c-label").textContent = name;
+      document.getElementById("c-interp").textContent = msg;
+    }
+    update();
+  }
+})();
+</script>
+
+</body>
+</html>

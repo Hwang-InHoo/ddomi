@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 — 또미</title>
+<meta name="description" content="또미 로그인. 구글 계정 또는 또미 아이디로 로그인합니다.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="in">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <div class="links"><a href="map.html">맛집 지도</a><a href="index.html#how">또미 소개</a></div>
+    <div class="sp"></div>
+    <div id="navauth"></div>
+  </div>
+</nav>
+
+<main class="auth-wrap">
+  <div class="card">
+    <h1 class="t">로그인</h1>
+    <p class="sub">또미 아이디 또는 가입하신 이메일로 로그인하세요.</p>
+
+    <button class="gbtn" id="gbtn" type="button"></button>
+
+    <div class="sep">또는</div>
+
+    <form id="form" novalidate>
+      <label class="fl" for="id">아이디 또는 이메일</label>
+      <input class="fi" id="id" type="text" autocomplete="username" placeholder="ddomi_user 또는 you@example.com">
+
+      <label class="fl" for="pw">비밀번호</label>
+      <input class="fi" id="pw" type="password" autocomplete="current-password" placeholder="8자 이상">
+
+      <button class="btn pri full" id="submit" type="submit" style="margin-top:24px">로그인</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+
+    <p class="foot-links">아직 계정이 없으신가요? <a href="signup.html">가입하기</a></p>
+  </div>
+</main>
+
+<footer class="ft">
+  <div class="wrap-c">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".18"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>또미</a>
+    <p class="fnote">또 가고 싶은 진짜 맛집만 남기는, 광고 없는 맛집 지도.</p>
+    <p class="copy">&copy; 2026 또미 · DDOMI · <a href="privacy.html">개인정보처리방침</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+(function(){
+  var A = window.DdomiAuth;
+
+  A.renderNavState("navauth").then(function(me){
+    if(me){ window.location.replace(me.isAdmin ? "admin.html" : "index.html"); }
+  });
+
+  A.wireGoogleButton("gbtn", "msg", "account.html");
+
+  document.getElementById("form").addEventListener("submit", function(e){
+    e.preventDefault();
+    A.hideMsg("msg");
+
+    var id = document.getElementById("id").value.trim();
+    var pw = document.getElementById("pw").value;
+    var btn = document.getElementById("submit");
+
+    if(!id){ A.showMsg("msg","err","아이디 또는 이메일을 입력해 주세요."); return; }
+    if(!pw){ A.showMsg("msg","err","비밀번호를 입력해 주세요."); return; }
+
+    btn.disabled = true;
+    btn.textContent = "확인하는 중…";
+
+    var isEmail = id.indexOf("@") > -1;
+    var p = isEmail ? A.signInWithEmail(id, pw) : A.signInWithUsername(id.toLowerCase(), pw);
+
+    p.then(function(r){
+      if(r && r.error) throw r.error;
+      return A.getMe();
+    }).then(function(me){
+      window.location.href = (me && me.isAdmin) ? "admin.html" : "index.html";
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = "로그인";
+      var m = (err && err.message) ? err.message : "로그인에 실패했습니다.";
+      if(/Invalid login credentials/i.test(m)) m = "아이디(이메일) 또는 비밀번호가 맞지 않습니다.";
+      if(/Email not confirmed/i.test(m)) m = "이메일 인증이 아직 완료되지 않았습니다. 받은 메일함을 확인해 주세요.";
+      if(/Failed to fetch|NetworkError/i.test(m)) m = "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+      A.showMsg("msg","err", m);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
