@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘은 또미가 골라줘 — 또미</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="place.css">
+<style>
+  :root{--soft:cubic-bezier(.17,.73,.19,1)}   /* 끝에서 길게 멎는 곡선 — 덜 딱딱하다 */
+  .wrap{max-width:1160px; margin:0 auto; padding:22px 24px 112px; transition:max-width .34s var(--ease)}
+  .wrap.wide{max-width:1320px}
+
+  /* 진행 띠 */
+  .trail{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:11px; scrollbar-width:none}
+  .trail::-webkit-scrollbar{display:none}
+  .trail .chip{flex:0 0 auto}
+  .trail .chip.dim{opacity:.46}
+  .trail .chip .ck{display:inline-block; animation:pop .3s var(--ease) both}
+
+  /* 어디까지 왔는지 — 칩만으로는 진행이 한눈에 안 들어온다 */
+  .prog{height:3px; background:var(--line); border-radius:999px; margin:0 0 24px; overflow:hidden}
+  .prog i{display:block; height:100%; width:0; border-radius:999px; background:var(--main);
+    transition:width .8s var(--soft)}
+
+  h1.q{font-size:clamp(23px,2.9vw,33px); line-height:1.18; letter-spacing:-.02em; font-weight:800; margin:0}
+  p.qh{font-size:14.5px; color:var(--soft); margin:11px 0 0}
+  /* 질문은 가려진 자리에서 밀려 올라온다 — 첫 화면 제목과 같은 방식.
+     단계가 바뀔 때마다 .in을 다시 걸어 처음부터 재생한다. */
+  .head .l{display:block; overflow:hidden; padding-bottom:.14em; margin-bottom:-.14em}
+  .head .l > i{display:block; font-style:normal; transform:translateY(118%);
+    transition:transform .98s var(--soft)}
+  .head.in .l > i{transform:none}
+  .head p.qh{opacity:0; transform:translateY(14px);
+    transition:opacity .72s var(--soft) .26s, transform .72s var(--soft) .26s}
+  .head.in p.qh{opacity:1; transform:none}
+
+  /* 등장 모션 — 단계가 바뀔 때마다 한 켜씩 올라온다 */
+  @keyframes up{from{opacity:0; transform:translateY(14px) scale(.985)} to{opacity:1; transform:none}}
+  @keyframes pop{from{opacity:0; transform:scale(.6)} to{opacity:1; transform:none}}
+  @keyframes drop{from{opacity:0; transform:rotate(-45deg) translate(7px,-16px)} to{opacity:1; transform:rotate(-45deg)}}
+  @keyframes fill{from{width:0} to{width:var(--w)}}
+  .riser{animation:up .78s var(--soft) both}
+
+  /* 단계가 옆으로 넘어간다.
+     항목이 제자리에서 갑자기 바뀌면 "딱딱하다"로 읽힌다 — 넘어가는 방향이 생기면
+     단계를 지나왔다는 게 몸으로 남는다. 다음은 오른쪽에서, 이전은 왼쪽에서 들어온다. */
+  .deck-next{animation:deckin .64s var(--soft) both}
+  .deck-prev{animation:deckinL .64s var(--soft) both}
+  @keyframes deckin {from{opacity:0; transform:translateX(56px)} to{opacity:1; transform:none}}
+  @keyframes deckinL{from{opacity:0; transform:translateX(-56px)} to{opacity:1; transform:none}}
+  /* 화면이 통째로 밀려 들어오는 동안 항목까지 따로 움직이면 산만하다 — 켜지기만 한다 */
+  @keyframes fadein{from{opacity:0} to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){
+    .deck-next,.deck-prev{animation:none !important}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .head .l > i{transform:none !important}
+    .head p.qh{opacity:1 !important; transform:none !important}
+    .riser,.mate,.pick[aria-pressed="true"],.big[aria-pressed="true"]{animation:none !important}
+  }
+
+  .grid{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px}
+  .pick{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:12px;
+    padding:13px 17px; font-size:15px; font-weight:600; text-align:left; line-height:1.3;
+    transition:background .16s var(--ease), color .16s, border-color .16s, transform .16s var(--ease)}
+  .pick:hover{border-color:var(--ink); transform:translateY(-2px)}
+  .pick:active{transform:translateY(0) scale(.975)}
+  /* 고른 순간 한 번 눌렸다 올라온다 — 눌렀다는 게 손에 남는다 */
+  .pick[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink);
+    animation:pickpop .46s var(--soft)}
+  @keyframes pickpop{0%{transform:scale(1)} 42%{transform:scale(1.045)} 100%{transform:scale(1)}}
+  .pick[disabled]{opacity:.4; cursor:default}
+  .pick[disabled]:hover{border-color:var(--line); transform:none}
+  .pick small{display:block; font-size:11.5px; opacity:.55; font-weight:500; margin-top:3px}
+
+  .lv{font-size:12.5px; font-weight:800; color:var(--muted); margin:22px 0 0}
+  .big{display:block; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:15px 19px; margin-bottom:8px; font:inherit;
+    transition:border-color .16s var(--ease), background .16s}
+  .big{transform:translateY(0)}
+  .big:hover{border-color:var(--ink); transform:translateY(-2px)}
+  .big:active{transform:scale(.99)}
+  .big[aria-pressed="true"]{border-color:var(--main); background:var(--tint); animation:pickpop .46s var(--soft)}
+  .big .l{font-size:16px; font-weight:700}
+  .big .r{font-size:13px; color:var(--muted); font-family:var(--serif); font-variant-numeric:tabular-nums}
+  .rowb{display:flex; justify-content:space-between; align-items:baseline; gap:12px}
+
+  .timeset{background:var(--sunken); border-radius:14px; padding:16px 18px; margin-top:8px}
+  .timeset .fl{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .timeset input[type=time]{font:inherit; font-size:15.5px; font-weight:700; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:9px 12px}
+  .timeset .to{color:var(--muted); font-weight:700}
+
+  /* 동행 */
+  .mates{margin-top:18px}
+  .mate{background:var(--surface); border-radius:14px; padding:15px 18px; margin-bottom:8px; animation:up .3s var(--ease) both}
+  .mate:nth-child(even){background:var(--sunken)}
+  .mate .who{font-size:15px; font-weight:800}
+  .mate .st{font-size:12.5px; color:var(--muted); margin-left:7px; font-weight:600}
+  .mate .st.ok{color:var(--teal)}
+  .mate .tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+  .mate.wait .tags{display:none}
+  .tg{border:1px solid var(--line); background:var(--bg); border-radius:999px; padding:5px 12px;
+    font-size:12.5px; font-weight:600; color:var(--soft); transition:background .14s, color .14s, border-color .14s}
+  .tg[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .send{background:var(--sunken); border-radius:14px; padding:16px 18px; margin-top:12px}
+  .send .ttl{font-size:14px; font-weight:800}
+  .send p{font-size:12.5px; color:var(--soft); margin:7px 0 0; line-height:1.6}
+  .send .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+  .send code{background:var(--surface); padding:4px 9px; border-radius:6px; font-size:12px}
+
+  .merge{background:var(--ink); color:var(--bg); border-radius:14px; padding:15px 19px; margin-top:13px; font-size:13.5px; line-height:1.65}
+  .merge b{color:var(--main)}
+
+  /* 지도 + 후보 */
+  .split{display:grid; grid-template-columns:1fr 404px; gap:18px; align-items:start; margin-top:20px}
+  /* z-index:0 — Leaflet 내부 레이어(400~800)가 서랍 위로 올라오지 않도록 가둔다 */
+  .mapbox{position:relative; z-index:0; height:clamp(380px,58svh,560px); border-radius:18px; overflow:hidden; background:var(--sunken)}
+  .mapbox .ml{position:absolute; left:14px; bottom:14px; z-index:500; background:var(--bg); border-radius:10px;
+    padding:8px 12px; font-size:12px; color:var(--soft); font-weight:600}
+  #map{position:absolute; inset:0}
+  .leaflet-container{font-family:inherit; background:#F6EDDA}
+  .leaflet-control-attribution{font-size:10px}
+  /* 후보 핀 — 지도 타일 위에서 묻히지 않게 흰 윤곽을 준다 (그림자 아님) */
+  .ddpin{width:26px; height:26px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+    background:var(--main); box-shadow:0 0 0 3px #fff; animation:drop .34s var(--ease) both} /* taste-skill-ignore */
+  .ddpin b{display:block; transform:rotate(45deg); color:#fff; font-size:13px; font-weight:800;
+    text-align:center; line-height:26px; font-family:var(--serif)}
+  .ddpin.on{background:var(--ink)}
+  .ddpin.done{background:var(--teal)}
+  .candcol{max-height:clamp(380px,58svh,560px); overflow:auto; padding-right:2px}
+  .cand{background:var(--surface); border-radius:15px; padding:16px 18px; margin-bottom:9px; cursor:pointer; width:100%;
+    text-align:left; font:inherit; border:1px solid transparent; animation:up .3s var(--ease) both;
+    transition:border-color .16s var(--ease), background .16s, transform .16s var(--ease)}
+  .cand:nth-child(even){background:var(--sunken)}
+  .cand:hover{border-color:var(--ink); transform:translateY(-1px)}
+  .cand[aria-pressed="true"]{border-color:var(--main); background:var(--tint)}
+  .cand .nm{font-size:17px; font-weight:800; letter-spacing:0}
+  .cand .mt{font-size:12.5px; color:var(--soft); margin-top:3px}
+  .why{display:inline-block; font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:999px; margin-bottom:8px}
+  .why.all{background:var(--main); color:#fff}
+  .why.some{background:var(--tint); color:var(--main-deep)}
+  .why.near{background:var(--sunken); color:var(--muted)}
+  .cand[aria-pressed="true"] .why.near{background:var(--bg)}
+  .sig{display:flex; gap:11px; flex-wrap:wrap; margin-top:10px; font-size:11.5px; color:var(--muted)}
+  .sig i{font-style:normal}
+  .no{font-size:12px; color:var(--muted); margin:3px 0 0}
+
+  /* 상세 점수 서랍 */
+  .scrim{position:fixed; inset:0; background:rgba(42,38,32,.32); opacity:0; pointer-events:none;
+    transition:opacity .24s var(--ease); z-index:40}
+  .scrim.on{opacity:1; pointer-events:auto}
+  .drawer{position:fixed; top:0; right:0; bottom:0; width:min(452px,100%); background:var(--bg); z-index:50;
+    transform:translateX(100%); transition:transform .32s var(--ease); overflow:auto; overscroll-behavior:contain}
+  .drawer.on{transform:none}
+  .dw{padding:24px 26px 120px}
+  .dw .x{position:absolute; top:16px; right:18px}
+  /* 서랍 안쪽(.dnm .score .layer .kv …)은 place.css가 가진다 — 지도 화면과 같은 상세를 쓴다 */
+  .dnm{padding-right:46px}
+  .dbar{position:fixed; left:auto; right:0; bottom:0; width:min(452px,100%); background:var(--bg); padding:16px 26px 22px; z-index:51}
+
+  /* 수락 */
+  .acc{background:var(--surface); border-radius:14px; padding:15px 18px; margin-bottom:8px; display:flex;
+    align-items:center; gap:12px; animation:up .3s var(--ease) both}
+  .acc:nth-child(even){background:var(--sunken)}
+  .acc .nmz{font-size:15px; font-weight:800; flex:1}
+  .acc .mark{width:26px; height:26px; border-radius:50%; background:var(--line); flex:none;
+    display:grid; place-items:center; font-size:14px; font-weight:800; color:var(--muted)}
+  .acc.ok .mark{background:var(--teal); color:#fff; animation:pop .32s var(--ease) both}
+  .acc .sz{font-size:12.5px; color:var(--muted); font-weight:600}
+  .acc.ok .sz{color:var(--teal)}
+
+  /* 일정표 */
+  .done{background:var(--surface); border-radius:16px; padding:17px 19px; animation:up .34s var(--ease) both}
+  .done.alt{background:var(--sunken)}
+  .done .dm{font-size:13px; color:var(--soft); margin-top:4px}
+  .walk{font-size:12.5px; color:var(--muted); padding:9px 0 9px 6px; animation:up .3s var(--ease) both}
+  .stamp{display:inline-block; background:var(--teal); color:#fff; font-size:12px; font-weight:800;
+    padding:5px 12px; border-radius:999px; animation:pop .34s var(--ease) both}
+
+  .bottom{position:fixed; left:0; right:0; bottom:0; background:var(--bg); z-index:30}
+  .bottom .in{max-width:1240px; margin:0 auto; padding:15px 24px 21px; display:flex; gap:10px; align-items:center}
+
+  @media (max-width:980px){
+    .split{grid-template-columns:1fr}
+    .mapbox{height:42svh}
+    .candcol{max-height:none; overflow:visible}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body>
+
+<!-- data-ui: 지도·핀·서랍은 제품의 인터페이스다 -->
+<div data-ui>
+<header class="ui-bar">
+  <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".2"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>
+  <a class="wordmark" href="index.html">또미</a>
+  <nav><a href="map.html">맛집 지도</a><a href="course.html" aria-current="page">또미가 골라줘</a><a href="about.html">또미 소개</a></nav>
+  <span class="sp"></span>
+  <div id="navauth"></div>
+</header>
+
+<main class="wrap" id="wrap">
+  <div class="trail" id="trail"></div>
+  <div class="prog" aria-hidden="true"><i id="progbar"></i></div>
+  <div id="deck">
+    <div class="head"><h1 class="q" id="qt"></h1><p class="qh" id="qh"></p></div>
+    <div id="stage"></div>
+  </div>
+</main>
+
+<div class="bottom">
+  <div class="in">
+    <button class="btn quiet" id="prev">이전</button>
+    <span class="sp"></span>
+    <button class="btn pri" id="next">다음</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"><div class="dw" id="dwbody"></div></aside>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="data.js?v=2026103"></script>
+<script src="place.js"></script>
+<script>
+(function(){
+if(window.DdomiAuth) DdomiAuth.renderNavState("navauth");
+
+/* ── 업종 묶음 (취향 설정과 같은 표) ── */
+var G={
+  한식:["백반/한정식","국/탕/찌개류","김밥/만두/분식","국수/칼국수","냉면/밀면","기타 한식 음식점","전/부침개"],
+  고기:["돼지고기 구이/찜","소고기 구이/찜","족발/보쌈","곱창 전골/구이","닭/오리고기 구이/찜","치킨"],
+  일식:["일식 회/초밥","일식 카레/돈가스/덮밥","일식 면 요리","기타 일식 음식점","복 요리 전문"],
+  중식:["중국집","마라탕/훠궈"],
+  양식:["경양식","피자","파스타/스테이크","버거","토스트/샌드위치/샐러드","기타 서양식 음식점","패밀리레스토랑"],
+  카페:["카페"], 베이커리:["빵/도넛"], 빙수:["아이스크림/빙수"],
+  술집:["요리 주점","일반 유흥 주점","생맥주 전문"]
+};
+var MEALG=["한식","고기","일식","중식","양식"], CAFEG=["카페","베이커리","빙수"], BARG=["술집"];
+var ALLG=MEALG.concat(CAFEG).concat(BARG);
+function cats(gs){ var c=[]; gs.forEach(function(g){ (G[g]||[]).forEach(function(x){ if(c.indexOf(x)<0) c.push(x); }); }); return c; }
+function jong(w){ var c=w.charCodeAt(w.length-1); return c>=0xAC00&&c<=0xD7A3 && (c-0xAC00)%28>0; }
+function eul(w){ return w+(jong(w)?"을":"를"); }
+function eun(w){ return w+(jong(w)?"은":"는"); }
+function iga(w){ return w+(jong(w)?"이":"가"); }
+function groupsFor(k){ return k==="cafe"?CAFEG : k==="bar"?BARG : MEALG; }
+
+/* ── 전국 행정구역. 시도·시군구 목록과 개수는 전국 목차(data/regions/index.json)에서 읽고,
+      동 목록은 고른 시군구 파일을 불러온 뒤에 채운다. 전국 가게를 한꺼번에 들고 있지 않기 위함이다. ── */
+var IDX=null;      /* 전국 목차 */
+var GEO={};        /* 시도이름 → 그 시도의 시군구 목록 */
+var DONG={};       /* 지금 불러온 시군구의 동별 개수 */
+function buildGeo(idx){
+  GEO={};
+  idx.sido.forEach(function(s){ GEO[s.name]=s.sigungu; });
+}
+function sggOf(sidoName,name){
+  var a=GEO[sidoName]||[];
+  for(var i=0;i<a.length;i++) if(a[i].name===name) return a[i];
+  return null;
+}
+function cntOf(o){ var n=0; for(var k in o){ n+= (typeof o[k]==="number"? o[k] : cntOf(o[k])); } return n; }
+function fmt(n){ return n.toLocaleString("ko-KR"); }
+
+/* ── 시간 ── */
+var 시간대=[
+  {k:"점심", l:"점심부터", s:12, e:18},
+  {k:"오후", l:"오후만",   s:14, e:18},
+  {k:"저녁", l:"저녁",     s:17, e:22},
+  {k:"하루", l:"하루 종일", s:11, e:21}
+];
+function hhmm(h){ var H=Math.floor(h), M=Math.round((h-H)*60); return (H<10?"0":"")+H+":"+(M<10?"0":"")+M; }
+function parseHM(v){ var a=(v||"").split(":"); if(a.length<2) return null; var h=+a[0], m=+a[1];
+  if(isNaN(h)||isNaN(m)) return null; return h+m/60; }
+
+/* ── 골격 ── */
+function buildSkeleton(s,e){
+  var out=[], lunch=null, dinner=null, short=(e-s)<3;
+  if(s<=13 && e>=13) lunch={key:"meal",name:"점심",from:Math.max(s,11),to:Math.min(e,14)};
+  if(e>=18 && !(short&&lunch)) dinner={key:"meal2",name:"저녁",from:Math.max(s,17),to:Math.min(e,21)};
+  if(lunch) out.push(lunch);
+  var cf=null;
+  if(lunch&&dinner&&dinner.from-lunch.to>=1) cf={from:lunch.to,to:dinner.from};
+  else if(lunch&&!dinner&&e-lunch.to>=1) cf={from:lunch.to,to:Math.min(e,lunch.to+3)};
+  else if(!lunch&&dinner&&dinner.from-s>=1) cf={from:s,to:dinner.from};
+  if(cf) out.push({key:"cafe",name:"카페",from:cf.from,to:cf.to});
+  if(dinner) out.push(dinner);
+  var bf=dinner?Math.max(21,dinner.to):21;
+  if(e>bf) out.push({key:"bar",name:"한 잔",from:bf,to:e});
+  if(!out.length) out.push({key:"meal",name:"식사",from:s,to:e});
+  out.sort(function(a,b){return a.from-b.from;});
+  return out;
+}
+
+/* ── 상태 ── */
+var D=null, step=0, MAP=null, drawerFor=null;
+/* 같은 단계 안에서 고르기만 해도 render()가 다시 돈다 — 단계 번호가 실제로
+   바뀐 경우에만 옆으로 넘긴다. 안 그러면 항목 하나 고를 때마다 화면이 밀린다. */
+var lastStep = null, deckDir = 0, deckT = null;
+var sido="", sgg="", sggCode="", dong="";
+var 때=시간대[0], custom=null, slots=[], anchor=null;
+var mates=[{name:"나", me:true, taste:["한식","고기","카페"], done:true, ok:true}];
+var picked={}, LINK="ddomi.app/j/7Kq2";
+
+function answered(){ return mates.filter(function(m){ return m.done; }); }
+function spanS(){ return custom? custom.s : 때.s; }
+function spanE(){ return custom? custom.e : 때.e; }
+function whenLabel(){ return custom? hhmm(custom.s)+"–"+hhmm(custom.e) : 때.l; }
+function whoLabel(){ return mates.length===1?"혼자":mates.length+"명"; }
+
+function merged(gs){
+  var ans=answered(), n=ans.length, all={};
+  ans.forEach(function(m){ m.taste.forEach(function(t){ all[t]=(all[t]||0)+1; }); });
+  var every=[], some=[];
+  gs.forEach(function(g){ if(all[g]===n) every.push(g); else if(all[g]) some.push(g); });
+  return {every:every, some:some, counts:all, n:n};
+}
+function whoLikes(g){
+  return answered().filter(function(m){ return m.taste.indexOf(g)>-1; }).map(function(m){ return m.name; });
+}
+
+/* ── 거리 ── */
+function metres(a,b){
+  var R=6371000,p=Math.PI/180, dLat=(b.lat-a.lat)*p, dLng=(b.lng-a.lng)*p;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function walkMin(m){ return Math.max(1,Math.round(m/67)); }
+
+function candidatesFor(slot, from){
+  var gs=groupsFor(slot.key), mg=merged(gs);
+  var pool=D.list.filter(function(p){ return p.dong===dong; });
+  function tag(p){
+    for(var i=0;i<mg.every.length;i++) if(cats([mg.every[i]]).indexOf(p.category)>-1) return {w:"all", g:mg.every[i]};
+    for(var j=0;j<mg.some.length;j++) if(cats([mg.some[j]]).indexOf(p.category)>-1) return {w:"some", g:mg.some[j]};
+    return null;
+  }
+  var ok=cats(gs), scored=[], used={};
+  slots.forEach(function(s){ if(s.key!==slot.key && picked[s.key]) used[picked[s.key].id]=1; });
+  pool.forEach(function(p){
+    if(ok.indexOf(p.category)<0) return;
+    if(used[p.id]) return;          /* 다른 칸에서 이미 고른 집은 다시 권하지 않는다 */
+    var t=tag(p), d=from? metres(from,p) : 0;
+    scored.push({p:p, why:t?t.w:"near", g:t?t.g:null, dist:d,
+      score:(t&&t.w==="all"?100:t&&t.w==="some"?60:30) - Math.min(25, d/120)});
+  });
+  scored.sort(function(a,b){ return b.score-a.score; });
+  var out=[], seen={};
+  for(var i=0;i<scored.length && out.length<5;i++){
+    var k=scored[i].g||"기타";
+    if((seen[k]||0)>=2) continue;
+    seen[k]=(seen[k]||0)+1; out.push(scored[i]);
+  }
+  return out;
+}
+
+/* ── 단계 ── */
+function STEPS(){
+  var a=[{k:"where",label:dong||"어디서"},{k:"when",label:whenLabel()},
+         {k:"who",label:whoLabel()},{k:"plan",label:slots.length?slots.length+"칸":"어떻게"}];
+  slots.forEach(function(s,i){ a.push({k:"slot"+i, label: picked[s.key]? picked[s.key].name : s.name}); });
+  if(mates.length>1) a.push({k:"accept",label:"수락"});
+  a.push({k:"final",label:"일정표"});
+  return a;
+}
+var MAPRO=null;
+function killMap(){ if(MAPRO){ MAPRO.disconnect(); MAPRO=null; } if(MAP){ MAP.remove(); MAP=null; } }
+/* 지도 상자의 크기가 잡히는 시점이 render 직후가 아니라서, 크기가 바뀔 때마다 타일을 다시 깐다 */
+function settleMap(pts){
+  function fix(){ if(!MAP) return; MAP.invalidateSize(); if(pts&&pts.length) MAP.fitBounds(pts,{padding:[48,48],maxZoom:17}); }
+  [60,260,700].forEach(function(d){ setTimeout(fix,d); });
+  var box=document.querySelector(".mapbox");
+  if(box&&window.ResizeObserver){ MAPRO=new ResizeObserver(fix); MAPRO.observe(box); }
+}
+
+function tileLayer(){
+  var CFG=window.DDOMI_CONFIG||{};
+  if(!CFG.VWORLD_KEY) return null;
+  return L.tileLayer("https://api.vworld.kr/req/wmts/1.0.0/"+CFG.VWORLD_KEY+"/Base/{z}/{y}/{x}.png",
+    {maxZoom:19, attribution:'지도 © <a href="https://www.vworld.kr">VWorld</a> · 데이터 © 소상공인시장진흥공단'});
+}
+function pin(label, cls){
+  return L.divIcon({className:"", html:'<div class="ddpin '+(cls||"")+'"><b>'+label+'</b></div>',
+    iconSize:[26,26], iconAnchor:[13,24]});
+}
+
+/* ── 그리기 ── */
+function render(){
+  killMap();
+  var st=STEPS(); if(step>=st.length) step=st.length-1;
+  var cur=st[step];
+
+  var tr=document.getElementById("trail");
+  tr.innerHTML=st.map(function(s,i){
+    return '<button class="chip'+(i>step?" dim":"")+'" data-i="'+i+'" aria-pressed="'+(i===step)+'">'+
+      (i<step?'<svg class="ck" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6.4 4.4 9.6 11 2.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg> ':"")+s.label+'</button>';
+  }).join("");
+  Array.prototype.forEach.call(tr.children,function(b){
+    b.onclick=function(){ var i=+b.getAttribute("data-i"); if(i<=step){ step=i; render(); } };
+  });
+
+  deckDir = (lastStep === null || lastStep === step) ? 0 : (step > lastStep ? 1 : -1);
+  lastStep = step;
+
+  var pb=document.getElementById("progbar");
+  if(pb) pb.style.width = (st.length>1 ? step/(st.length-1)*100 : 100).toFixed(1)+"%";
+
+  var qt=document.getElementById("qt"), qh=document.getElementById("qh"), sg=document.getElementById("stage");
+  document.getElementById("wrap").classList.toggle("wide", cur.k.indexOf("slot")===0 || cur.k==="final");
+  var head=document.querySelector(".head");
+  head.classList.remove("in");          /* 모션을 처음부터 다시 재생한다 */
+  sg.innerHTML="";
+
+  if(cur.k==="where") stepWhere(qt,qh,sg);
+  else if(cur.k==="when") stepWhen(qt,qh,sg);
+  else if(cur.k==="who") stepWho(qt,qh,sg);
+  else if(cur.k==="plan") stepPlan(qt,qh,sg);
+  else if(cur.k==="accept") stepAccept(qt,qh,sg);
+  else if(cur.k==="final") stepFinal(qt,qh,sg);
+  else stepSlot(qt,qh,sg,+cur.k.slice(4));
+
+  /* 질문을 가려진 자리에 넣는다. 각 단계 함수가 textContent로 넣은 뒤라
+     여기서 한 번만 감싸면 모든 단계에 똑같이 적용된다. */
+  var qtext = qt.textContent;
+  qt.innerHTML = '<span class="l"><i></i></span>';
+  qt.firstChild.firstChild.textContent = qtext;
+  /* 옆으로 넘어갈 때는 제목이 따로 올라오지 않는다 — 화면 전체가 이미 움직이고 있다.
+     (스타일을 확정하지 않고 클래스를 다시 붙이면 전환이 생략된다) */
+  if(!deckDir) void head.offsetWidth;
+  head.classList.add("in");
+
+  /* 선택지가 한꺼번에 뜨면 목록으로 보이고, 조금씩 어긋나 올라오면 "고르는 화면"이 된다 */
+  var items = sg.querySelectorAll(".pick,.big,.mate,.timeset,.merge,.send");
+  if(items.length){
+    Array.prototype.forEach.call(sg.querySelectorAll(".riser"), function(r){ r.style.animation="none"; });
+    for(var ii=0; ii<items.length && ii<16; ii++){
+      items[ii].style.animation = deckDir
+        ? "fadein .46s var(--soft) " + (0.1 + ii*0.052).toFixed(3) + "s both"
+        : "up .78s var(--soft) "     + (0.06 + ii*0.072).toFixed(3) + "s both";
+    }
+  }
+
+  var deck=document.getElementById("deck");
+  clearTimeout(deckT);
+  deck.classList.remove("deck-next","deck-prev");
+  if(deckDir){
+    void deck.offsetWidth;
+    deck.classList.add(deckDir>0 ? "deck-next" : "deck-prev");
+    /* 애니메이션이 끝나면 클래스를 뗀다 — 지도(Leaflet)가 올라가는 단계에서
+       변형이 남아 있지 않도록 한다 */
+    deckT = setTimeout(function(){ deck.classList.remove("deck-next","deck-prev"); }, 700);
+  }
+
+  document.getElementById("prev").style.visibility=step?"visible":"hidden";
+  var last=step===st.length-1;
+  document.getElementById("next").textContent=last?"처음으로":"다음";
+  document.getElementById("next").style.visibility = (cur.k==="accept" && !allOk()) ? "hidden" : "visible";
+}
+
+/* 1. 어디서 — 전국 3단 */
+function stepWhere(qt,qh,sg){
+  qt.textContent="어디서 만나시나요";
+  qh.textContent="시·도 → 시·군·구 → 동 순서로 좁힙니다. 모든 칸이 여기에 앵커됩니다.";
+  var h='<p class="lv">시 · 도</p><div class="grid">'+IDX.sido.map(function(s){
+    return '<button class="pick" data-s="'+s.name+'" aria-pressed="'+(s.name===sido)+'">'+
+      s.name.replace("특별자치시","").replace("특별자치도","").replace("광역시","").replace("특별시","")+
+      '<small>'+fmt(s.count)+'곳</small></button>';
+  }).join("")+'</div>';
+
+  if(GEO[sido]){
+    h+='<p class="lv">시 · 군 · 구</p><div class="grid">'+GEO[sido].map(function(g){
+      return '<button class="pick" data-g="'+g.name+'" aria-pressed="'+(g.name===sgg)+'">'+g.name+
+        '<small>'+fmt(g.count)+'곳</small></button>';
+    }).join("")+'</div>';
+    var ds=Object.keys(DONG).sort(function(a,b){return DONG[b]-DONG[a];});
+    if(ds.length){
+      h+='<p class="lv">동 · 읍 · 면</p><div class="grid">'+ds.map(function(n){
+        return '<button class="pick" data-d="'+n+'" aria-pressed="'+(n===dong)+'">'+n+
+          '<small>'+fmt(DONG[n])+'곳</small></button>';
+      }).join("")+'</div>';
+    } else {
+      h+='<p class="small" style="margin-top:14px">동 목록을 불러오는 중입니다.</p>';
+    }
+  }
+  h+='<p class="small" style="margin-top:18px">또미가 들고 있는 공공데이터는 전국 <b>'+fmt(IDX.total)+
+     '곳</b>입니다. 평가는 아직 없으므로 점수 대신 "평가 준비중"으로만 보여드립니다.</p>';
+  sg.innerHTML='<div class="riser">'+h+'</div>';
+
+  Array.prototype.forEach.call(sg.querySelectorAll("[data-s]"),function(b){
+    b.onclick=function(){ sido=b.getAttribute("data-s"); pickSgg(GEO[sido][0]); };
+  });
+  Array.prototype.forEach.call(sg.querySelectorAll("[data-g]"),function(b){
+    b.onclick=function(){ pickSgg(sggOf(sido,b.getAttribute("data-g"))); };
+  });
+  Array.prototype.forEach.call(sg.querySelectorAll("[data-d]"),function(b){
+    b.onclick=function(){ dong=b.getAttribute("data-d"); step++; regen(); };
+  });
+}
+
+/* 2. 언제 — 프리셋 + 직접 입력 */
+function stepWhen(qt,qh,sg){
+  qt.textContent="언제 만나시나요";
+  qh.textContent="시간대를 고르면 칸이 자동으로 나뉩니다. 직접 정해도 됩니다.";
+  var h=시간대.map(function(t){
+    return '<button class="big" data-k="'+t.k+'" aria-pressed="'+(!custom&&때.k===t.k)+'">'+
+      '<div class="rowb"><span class="l">'+t.l+'</span><span class="r">'+hhmm(t.s)+' – '+hhmm(t.e)+'</span></div></button>';
+  }).join("");
+  h+='<p class="lv">직접 정하기</p><div class="timeset">'+
+     '<div class="fl"><input type="time" id="t1" value="'+hhmm(spanS())+'" step="1800">'+
+     '<span class="to">부터</span>'+
+     '<input type="time" id="t2" value="'+hhmm(spanE())+'" step="1800">'+
+     '<span class="to">까지</span>'+
+     '<button class="btn line sm" id="tapply">이 시간으로</button></div>'+
+     '<p class="hint" id="tmsg">30분 단위로 정할 수 있습니다. 시작보다 1시간 이상 뒤로 끝나야 칸이 생깁니다.</p></div>';
+  sg.innerHTML='<div class="riser">'+h+'</div>';
+
+  Array.prototype.forEach.call(sg.querySelectorAll(".big"),function(b){
+    b.onclick=function(){
+      때=시간대.filter(function(t){return t.k===b.getAttribute("data-k");})[0];
+      custom=null; step++; regen();
+    };
+  });
+  document.getElementById("tapply").onclick=function(){
+    var s=parseHM(document.getElementById("t1").value), e=parseHM(document.getElementById("t2").value);
+    var msg=document.getElementById("tmsg");
+    if(s===null||e===null){ msg.textContent="시간을 두 칸 모두 채워 주세요."; return; }
+    if(e-s<1){ msg.textContent="끝나는 시간이 시작보다 1시간 이상 뒤여야 합니다."; return; }
+    custom={s:s,e:e}; step++; regen();
+  };
+}
+
+/* 3. 누구와 — 링크 보내기 */
+function stepWho(qt,qh,sg){
+  qt.textContent="누구와 가시나요";
+  qh.textContent="일행이 있으면 링크를 보내 각자 취향을 받습니다. 모인 답으로 후보를 고릅니다.";
+  sg.innerHTML='<div class="riser"><div class="grid">'+[1,2,3,4].map(function(n){
+    return '<button class="pick" data-n="'+n+'" aria-pressed="'+(mates.length===n)+'">'+(n===1?"혼자":n+"명")+'</button>';
+  }).join("")+'</div><div class="mates" id="mates"></div></div>';
+  Array.prototype.forEach.call(sg.querySelectorAll(".pick"),function(b){
+    b.onclick=function(){ setMates(+b.getAttribute("data-n")); render(); };
+  });
+  paintMates();
+}
+
+function setMates(n){
+  var seeds=[["일식","한식","카페"],["양식","카페","술집"],["고기","중식","베이커리"]];
+  mates=[{name:"나", me:true, taste:["한식","고기","카페"], done:true, ok:true}];
+  for(var i=1;i<n;i++) mates.push({name:"동행 "+i, taste:seeds[(i-1)%3].slice(), done:false, ok:false});
+  picked={};
+}
+
+function paintMates(){
+  var box=document.getElementById("mates"); if(!box) return;
+  var waiting=mates.filter(function(m){ return !m.done; }).length;
+  box.innerHTML=mates.map(function(m,mi){
+    return '<div class="mate'+(m.done?"":" wait")+'" style="animation-delay:'+(mi*55)+'ms">'+
+      '<span class="who">'+m.name+'</span>'+
+      '<span class="st'+(m.done?" ok":"")+'">'+
+        (m.me?"내 취향 설정에서 가져옴":(m.done?"취향 보냈습니다":"아직 답하지 않았습니다"))+'</span>'+
+      '<div class="tags">'+ALLG.map(function(g){
+        return '<button class="tg" data-m="'+mi+'" data-g="'+g+'" aria-pressed="'+(m.taste.indexOf(g)>-1)+'">'+g+'</button>';
+      }).join("")+'</div></div>';
+  }).join("");
+
+  if(mates.length>1){
+    box.insertAdjacentHTML("beforeend",
+      '<div class="send"><div class="ttl">일행에게 링크 보내기</div>'+
+      '<p>가입 없이 취향만 고르면 됩니다. <code>'+LINK+'</code></p>'+
+      '<div class="btns">'+
+        '<button class="btn line sm" id="kk">카카오톡으로 보내기</button>'+
+        '<button class="btn line sm" id="cp">링크 복사</button>'+
+        '<button class="btn line sm" id="ap">또미 앱에서 열기</button>'+
+        (waiting? '<button class="btn accent sm" id="sim">답이 오면 (시연)</button>':'')+
+      '</div><p class="hint" id="smsg">카카오 공유와 앱 연동은 아직 붙이지 않았습니다. 지금은 링크를 복사해 직접 보내는 방식입니다.</p></div>');
+    var say=function(t){ var e=document.getElementById("smsg"); if(e) e.textContent=t; };
+    var copy=function(){
+      var t="https://"+LINK;
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(
+        function(){ say("링크를 복사했습니다. 카카오톡 대화방에 붙여 넣어 주세요."); },
+        function(){ say("복사가 막혔습니다. 링크를 직접 적어 주세요. "+t); });
+      else say("이 브라우저에서는 복사가 안 됩니다. 링크를 직접 적어 주세요. "+t);
+    };
+    document.getElementById("kk").onclick=function(){
+      say("카카오 공유 SDK가 아직 연동되지 않아 또미가 직접 보낼 수 없습니다. 링크를 복사해 두었습니다.");
+      copy();
+    };
+    document.getElementById("cp").onclick=copy;
+    document.getElementById("ap").onclick=function(){
+      say("또미 앱은 아직 출시 전입니다. 앱이 나오면 이 링크가 앱으로 바로 열립니다.");
+    };
+    var sim=document.getElementById("sim");
+    if(sim) sim.onclick=function(){
+      var rest=mates.filter(function(m){return !m.done;});
+      rest.forEach(function(m,i){ setTimeout(function(){ m.done=true; paintMates(); }, 260*(i+1)); });
+    };
+  }
+
+  var mg=merged(ALLG);
+  box.insertAdjacentHTML("beforeend",'<div class="merge">'+
+    (waiting? '아직 '+waiting+'명을 기다리는 중입니다. 지금 답한 '+mg.n+'명 기준으로 — ':'')+
+    (mg.every.length? '모두가 고른 것 <b>'+mg.every.join(" · ")+'</b>' : '모두가 고른 것 <b>없음</b>')+
+    (mg.some.length? ' · 갈리는 것 '+mg.some.join(" · ") : '')+'</div>');
+
+  Array.prototype.forEach.call(box.querySelectorAll(".tg"),function(b){
+    b.onclick=function(){
+      var m=mates[+b.getAttribute("data-m")], g=b.getAttribute("data-g");
+      var at=m.taste.indexOf(g); at>-1? m.taste.splice(at,1) : m.taste.push(g);
+      paintMates();
+    };
+  });
+}
+
+/* 4. 골격 확인 */
+function stepPlan(qt,qh,sg){
+  qt.textContent="이렇게 돌까요";
+  qh.textContent=hhmm(spanS())+" – "+hhmm(spanE())+" · "+(custom?"직접 정한 시간":"시간대")+"에 맞춰 나눴습니다.";
+  sg.innerHTML=slots.map(function(s,i){
+    return '<div class="done'+(i%2?" alt":"")+'" style="margin-bottom:8px;animation-delay:'+(i*70)+'ms">'+
+      '<div class="rowb"><span class="l" style="font-size:16px;font-weight:700">'+s.name+'</span>'+
+      '<span class="r" style="font-size:13px;color:var(--muted);font-family:var(--serif)">'+hhmm(s.from)+' – '+hhmm(s.to)+'</span></div></div>';
+  }).join("")+'<p class="small" style="margin-top:14px">칸이 없는 종류는 묻지 않습니다. 저녁부터 시작하면 점심 칸이 아예 생기지 않습니다.</p>';
+}
+
+/* 5. 칸마다 — 지도 + 후보 */
+function stepSlot(qt,qh,sg,idx){
+  var slot=slots[idx];
+  var from = idx===0 ? anchor : (picked[slots[idx-1].key] || anchor);
+  var list=candidatesFor(slot, from), mg=merged(groupsFor(slot.key));
+
+  qt.textContent=slot.name+" 어디로 갈까요";
+  qh.textContent=hhmm(slot.from)+" – "+hhmm(slot.to)+" · "+dong+" · "+
+    (list.length? "후보 "+list.length+"곳. 누르면 점수를 자세히 봅니다."
+                : "이 동네에는 조건에 맞는 곳이 없습니다.");
+
+  if(!list.length){
+    sg.innerHTML='<div class="riser"><div class="merge">'+dong+'에 '+
+      groupsFor(slot.key).join(" · ")+' 업종으로 등록된 곳이 없습니다. '+
+      '</div>'+
+      '<div class="send" style="margin-top:14px"><div class="ttl">여기서 할 수 있는 것</div>'+
+      '<p>동네를 넓히거나, 이 칸을 빼고 이어서 짭니다.</p>'+
+      '<div class="btns"><button class="btn line sm" id="goback">동네 다시 고르기</button>'+
+      '<button class="btn accent sm" id="skip">이 칸 빼고 짜기</button></div></div></div>';
+    document.getElementById("goback").onclick=function(){ step=0; render(); };
+    document.getElementById("skip").onclick=function(){
+      delete picked[slot.key];
+      slots.splice(idx,1);
+      if(step>=STEPS().length) step=STEPS().length-1;
+      render();
+    };
+    return;
+  }
+
+  var head='<div class="merge">'+
+    (mg.every.length? '<b>'+mg.every.join("·")+'</b>'+(jong(mg.every[mg.every.length-1])?'은':'는')+' '+(mg.n>1?"답한 "+mg.n+"명 모두가":"당신이")+' 고른 취향입니다. 먼저 보여드립니다.'
+                    : '모두가 함께 고른 취향이 없어서, 한 사람이라도 고른 것부터 보여드립니다.')+
+    (mg.some.length? ' <span style="opacity:.75">'+mg.some.join("·")+(jong(mg.some[mg.some.length-1])?'은':'는')+' 일부만 골랐습니다.</span>':'')+'</div>';
+
+  sg.innerHTML=head+'<div class="split">'+
+    '<div class="mapbox"><div id="map"></div><div class="ml">주황 핀이 후보, 초록 핀은 이미 정한 곳입니다</div></div>'+
+    '<div class="candcol" id="col"></div></div>';
+
+  var col=document.getElementById("col");
+  col.innerHTML=list.map(function(c,i){
+    var w=c.why==="all"?'<span class="why all">'+(mg.n>1?"모두 좋아해요":"내 취향")+'</span>'
+        :c.why==="some"?'<span class="why some">'+c.g+'만 겹쳐요</span>'
+        :'<span class="why near">가까워서</span>';
+    return '<button class="cand" data-i="'+i+'" style="animation-delay:'+(i*65)+'ms" '+
+      'aria-pressed="'+(picked[slot.key]&&picked[slot.key].id===c.p.id)+'">'+
+      w+'<div class="nm"><span style="font-family:var(--serif);color:var(--muted);margin-right:7px">'+(i+1)+'</span>'+c.p.name+'</div>'+
+      '<div class="mt">'+c.p.category+(c.dist?' · 도보 약 '+walkMin(c.dist)+'분':'')+'</div>'+
+      '<div class="sig"><i>미식점수 <span class="dash">—</span></i><i>버틴 시간 <span class="dash">—</span></i>'+
+      '<i>광고 노출도 <span class="dash">—</span></i></div></button>';
+  }).join("")+'<p class="no">점수가 비어 있는 이유는 후보를 누르면 설명합니다.</p>';
+
+  Array.prototype.forEach.call(col.querySelectorAll(".cand"),function(b){
+    b.onclick=function(){ openDrawer(list[+b.getAttribute("data-i")], slot, from, idx); };
+  });
+
+  /* 지도 */
+  var tl=tileLayer();
+  var ctr=from||anchor||{lat:list[0]?list[0].p.lat:35.157, lng:list[0]?list[0].p.lng:129.059};
+  MAP=L.map("map",{zoomControl:true}).setView([ctr.lat,ctr.lng],16);
+  if(tl) tl.addTo(MAP);
+
+  var pts=[];
+  slots.forEach(function(s,si){
+    var p=picked[s.key]; if(!p||si>=idx) return;
+    L.marker([p.lat,p.lng],{icon:pin(si+1,"done")}).addTo(MAP).bindTooltip(s.name+" "+p.name,{direction:"top",offset:[0,-20]});
+    pts.push([p.lat,p.lng]);
+  });
+  var bounds=[];
+  list.forEach(function(c,i){
+    var on=picked[slot.key]&&picked[slot.key].id===c.p.id;
+    var m=L.marker([c.p.lat,c.p.lng],{icon:pin(i+1,on?"on":"")}).addTo(MAP);
+    m.bindTooltip(c.p.name+" · "+c.p.category,{direction:"top",offset:[0,-20]});
+    m.on("click",function(){ openDrawer(c, slot, from, idx); });
+    bounds.push([c.p.lat,c.p.lng]);
+  });
+  if(pts.length>1) L.polyline(pts,{color:"#1D9E75",weight:3,opacity:.7,dashArray:"5 6"}).addTo(MAP);
+  var all=bounds.concat(pts);
+  if(all.length) MAP.fitBounds(all,{padding:[46,46], maxZoom:17});
+  settleMap(all);
+}
+
+/* 상세 점수 서랍 */
+function openDrawer(c, slot, from, idx){
+  drawerFor={c:c, slot:slot, idx:idx};
+  var p=c.p, d=c.dist;
+  var likes=c.g? whoLikes(c.g) : [];
+  var reason = c.why==="all" ? "답한 "+merged(groupsFor(slot.key)).n+"명이 모두 "+eul(c.g)+" 골랐습니다."
+             : c.why==="some" ? eul(c.g)+" 고른 사람: "+likes.join(" · ")
+             : "취향에 걸리는 업종은 아니지만, 동선에서 가까워 후보에 올렸습니다.";
+
+  document.getElementById("dwbody").innerHTML=
+    '<button class="btn quiet sm x" id="dx">닫기</button>'+
+    DdomiPlace.detail(p, {
+      head: slot.name+' 후보 · '+hhmm(slot.from)+' – '+hhmm(slot.to),
+      reason: reason,
+      walk: {label:(idx===0?"출발점에서":"앞 칸에서"), dist:d}
+    });
+  DdomiPlace.bind(document.getElementById("dwbody"));
+
+  var bar=document.getElementById("dbar");
+  if(bar) bar.remove();
+  document.getElementById("drawer").insertAdjacentHTML("afterend",
+    '<div class="dbar" id="dbar"><button class="btn pri full" id="dpick">이 곳으로 정하기</button></div>');
+
+  document.getElementById("drawer").classList.add("on");
+  document.getElementById("drawer").setAttribute("aria-hidden","false");
+  document.getElementById("scrim").classList.add("on");
+  document.getElementById("dx").onclick=closeDrawer;
+  document.getElementById("dpick").onclick=function(){
+    picked[slot.key]=c.p; closeDrawer();
+    if(step<STEPS().length-1) step++;
+    render();
+  };
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("on");
+  document.getElementById("drawer").setAttribute("aria-hidden","true");
+  document.getElementById("scrim").classList.remove("on");
+  var bar=document.getElementById("dbar"); if(bar) bar.remove();
+  drawerFor=null;
+}
+document.getElementById("scrim").onclick=closeDrawer;
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeDrawer(); });
+
+/* 6. 수락 — 일행이 있을 때만 */
+function allOk(){ return mates.every(function(m){ return m.ok; }); }
+function stepAccept(qt,qh,sg){
+  qt.textContent="일행에게 확인받기";
+  qh.textContent="정한 일정을 링크로 보내 수락을 받습니다. 모두 수락하면 일정표가 확정됩니다.";
+  var rows=mates.map(function(m,i){
+    return '<div class="acc'+(m.ok?" ok":"")+'" style="animation-delay:'+(i*60)+'ms">'+
+      '<span class="mark">'+(m.ok?'<svg aria-hidden="true" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6.4 4.4 9.6 11 2.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>':"")+'</span>'+
+      '<span class="nmz">'+m.name+'</span>'+
+      '<span class="sz">'+(m.me?"요청자":(m.ok?"수락했습니다":"기다리는 중"))+'</span></div>';
+  }).join("");
+  var sum=slots.filter(function(s){return picked[s.key];}).map(function(s){
+    return s.name+" "+picked[s.key].name;
+  }).join(" → ");
+  sg.innerHTML='<div class="riser"><div class="merge">'+dong+' · '+hhmm(spanS())+'–'+hhmm(spanE())+'<br><b>'+sum+'</b></div>'+
+    '<div style="margin-top:14px">'+rows+'</div>'+
+    '<div class="send"><div class="ttl">수락 요청 보내기</div>'+
+    '<p>같은 링크 <code>'+LINK+'</code>로 일정이 전달됩니다. 한 명이라도 거절하면 그 칸만 다시 고릅니다.</p>'+
+    '<div class="btns"><button class="btn line sm" id="kk2">카카오톡으로 보내기</button>'+
+    (allOk()?'':'<button class="btn accent sm" id="sim2">수락이 오면 (시연)</button>')+'</div>'+
+    '<p class="hint" id="smsg2">카카오 공유는 아직 연동 전이라 또미가 직접 보내지 않습니다.</p></div>'+
+    (allOk()?'<p class="small" style="margin-top:16px"><span class="stamp">전원 수락</span> 아래 버튼으로 일정표를 확정합니다.</p>':'')+
+    '</div>';
+  document.getElementById("kk2").onclick=function(){
+    document.getElementById("smsg2").textContent="카카오 공유 SDK 연동 전입니다. 링크를 복사해 직접 보내 주세요. https://"+LINK;
+  };
+  var s2=document.getElementById("sim2");
+  if(s2) s2.onclick=function(){
+    var rest=mates.filter(function(m){return !m.ok;});
+    rest.forEach(function(m,i){ setTimeout(function(){ m.ok=true; render(); }, 300*(i+1)); });
+  };
+}
+
+/* 7. 일정표 */
+function stepFinal(qt,qh,sg){
+  var done=slots.filter(function(s){ return picked[s.key]; });
+  if(!done.length){
+    qt.textContent="아직 정한 칸이 없습니다";
+    qh.textContent="위 진행 띠에서 칸을 눌러 후보를 골라 주세요.";
+    sg.innerHTML=""; return;
+  }
+  qt.textContent=mates.length>1&&allOk()? "확정된 일정" : "오늘 일정";
+  qh.textContent=dong+" · "+hhmm(spanS())+" – "+hhmm(spanE())+" · "+whoLabel();
+
+  var rows="", from=anchor, total=0, pts=[], k=0;
+  done.forEach(function(s){
+    var p=picked[s.key], mm=from?walkMin(metres(from,p)):0; total+=mm;
+    rows+='<p class="walk" style="animation-delay:'+(k*80)+'ms">'+(from===anchor?"출발점에서":"여기서")+' 도보 약 '+mm+'분</p>'+
+      '<div class="done'+(k%2?" alt":"")+'" style="margin-bottom:8px;animation-delay:'+(k*80+40)+'ms">'+
+      '<div class="rowb"><span class="l" style="font-size:17px;font-weight:800">'+p.name+'</span>'+
+      '<span class="r" style="font-size:13px;color:var(--muted);font-family:var(--serif)">'+hhmm(s.from)+' – '+hhmm(s.to)+'</span></div>'+
+      '<div class="dm">'+s.name+' · '+p.category+' · '+(p.roadAddr||p.addr||"")+'</div>'+
+      '<div class="sig"><i>미식점수 <span class="dash">—</span></i><i>영업시간 <span class="dash">미확인</span></i></div></div>';
+    pts.push([p.lat,p.lng]); from=p; k++;
+  });
+
+  sg.innerHTML='<div class="split"><div class="mapbox"><div id="map"></div>'+
+    '<div class="ml">정한 순서대로 이어 그린 동선입니다</div></div><div class="candcol">'+
+    (mates.length>1&&allOk()? '<p style="margin:0 0 12px"><span class="stamp">'+mates.length+'명 전원 수락</span></p>':'')+
+    rows+
+    '<p class="small" style="margin-top:14px">총 도보 약 '+total+'분. 직선거리 기준 추정입니다.<br>'+
+    '영업시간은 데이터에 없습니다. 가기 전 확인하세요.</p>'+
+    '<p class="small">아직 저장되지 않습니다. '+
+    '다녀와서 남기는 평가가 미식점수의 재료가 됩니다.</p></div></div>';
+
+  var tl=tileLayer();
+  MAP=L.map("map",{zoomControl:true}).setView(pts[0],16);
+  if(tl) tl.addTo(MAP);
+  done.forEach(function(s,i){
+    var p=picked[s.key];
+    L.marker([p.lat,p.lng],{icon:pin(i+1,"done")}).addTo(MAP)
+      .bindTooltip(hhmm(s.from)+" "+s.name+" · "+p.name,{direction:"top",offset:[0,-20]});
+  });
+  if(pts.length>1) L.polyline(pts,{color:"#1D9E75",weight:3.5,opacity:.8}).addTo(MAP);
+  MAP.fitBounds(pts,{padding:[50,50], maxZoom:17});
+  settleMap(pts);
+}
+
+/* ── 다시 깔기 ── */
+function regen(){
+  slots=buildSkeleton(spanS(),spanE());
+  picked={};
+  var pool=D.list.filter(function(p){return p.dong===dong;});
+  if(pool.length){
+    var la=0,ln=0; pool.forEach(function(p){la+=p.lat;ln+=p.lng;});
+    anchor={lat:la/pool.length, lng:ln/pool.length};
+  } else anchor=null;
+  render();
+}
+
+document.getElementById("next").onclick=function(){
+  var last=STEPS().length-1;
+  if(step<last){ step++; render(); }
+  else { step=0; mates.forEach(function(m){ if(!m.me){ m.ok=false; } }); render(); }
+};
+document.getElementById("prev").onclick=function(){ if(step){ step--; render(); } };
+
+/* 고른 시군구 파일만 불러온다. 전국 84만 곳을 한꺼번에 들고 있으면 브라우저가 멈춘다. */
+function pickSgg(g){
+  if(!g) return;
+  sgg=g.name; sggCode=g.code; DONG={}; render();
+  Ddomi.region(g.code).then(function(r){
+    if(sggCode!==g.code) return;          /* 받는 사이에 다른 지역을 골랐으면 버린다 */
+    D=r; DONG={};
+    r.list.forEach(function(p){ DONG[p.dong]=(DONG[p.dong]||0)+1; });
+    var ds=Object.keys(DONG).sort(function(a,b){return DONG[b]-DONG[a];});
+    dong=ds[0]||""; render();
+  });
+}
+
+Ddomi.index().then(function(idx){
+  IDX=idx; buildGeo(idx);
+  sido=idx.sido[0].name;
+  setMates(1);
+  pickSgg(GEO[sido][0]);
+});
+})();
+</script>
+</body>
+</html>

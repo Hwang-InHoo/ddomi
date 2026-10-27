@@ -1,0 +1,51 @@
+/* ═══════════════════════════════════════════════════
+   또미 — 가게 상세 공용 모습
+   지도(map.html)와 또미가 골라줘(course.html)가 같은 상세를 쓴다.
+   course.html 서랍에서 쓰던 값을 그대로 옮겨 왔고, 쓰는 자리가 서랍인지
+   사이드바인지는 이 파일이 모른다 — 바깥 틀은 각 화면이 정한다.
+   ═══════════════════════════════════════════════════ */
+
+.pd{padding:22px 24px 40px}
+.pd .phead{font-size:12.5px; color:var(--muted); margin:0}
+.dnm{font-size:24px; font-weight:800; letter-spacing:-.02em; line-height:1.2; margin:10px 0 0}
+.dsub{font-size:13.5px; color:var(--soft); margin:6px 0 0}
+
+/* 점수 — 없는 숫자는 —로 둔다. 비워 두는 것도 정보다. */
+.score{background:var(--sunken); border-radius:16px; padding:20px; margin-top:18px;
+  display:flex; align-items:baseline; gap:14px}
+.score .v{font-family:var(--serif); font-size:46px; line-height:1; letter-spacing:-.02em; color:var(--muted)}
+.score .k{font-size:13px; color:var(--soft); line-height:1.55}
+.score .k b{display:block; font-size:14.5px; color:var(--ink)}
+
+.lv{font-size:12.5px; font-weight:800; color:var(--muted); margin:22px 0 8px}
+
+.layer{background:var(--surface); border-radius:14px; padding:15px 17px; margin-top:8px}
+.layer.alt{background:var(--sunken)}
+.layer .lh{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+.layer .ln{font-size:14.5px; font-weight:800}
+.layer .lvv{font-family:var(--serif); font-size:15px; color:var(--muted)}
+.layer .lb{font-size:12.5px; color:var(--soft); margin:6px 0 0; line-height:1.6}
+.bar{height:6px; border-radius:999px; background:var(--line); margin-top:10px; overflow:hidden}
+.bar i{display:block; height:100%; background:var(--main); width:var(--w,0)}
+
+.kv{display:flex; justify-content:space-between; gap:12px; padding:10px; font-size:13px}
+.kv:nth-child(odd){background:var(--sunken); border-radius:8px}
+.kv dt{color:var(--muted); flex:none}
+.kv dd{margin:0; font-weight:600; text-align:right; min-width:0}
+
+/* 길찾기 — 영업시간·전화가 없으니 최소한 가는 길은 바로 열어 준다 */
+.pgo{display:flex; gap:7px; margin-top:10px; flex-wrap:wrap}
+.pgo .btn{flex:1 1 auto; min-width:120px}
+
+/* 같은 동네 비슷한 집 */
+.simi{display:block; background:var(--surface); border-radius:12px; padding:13px 15px; margin-top:7px;
+  width:100%; text-align:left; border:0; transition:background .16s var(--ease)}
+.simi.alt{background:var(--sunken)}
+.simi:hover{background:var(--tint)}
+.simi b{display:block; font-size:14.5px; font-weight:800}
+.simi span{display:block; font-size:12px; color:var(--muted); margin-top:2px}
+
+.pnote{font-size:12.5px; color:var(--muted); line-height:1.6; margin:14px 0 0}
+
+/* 아래에 붙는 행동 띠 — 쓰는 화면이 넣는다 */
+.pbar{padding:14px 24px 20px; background:var(--bg)}

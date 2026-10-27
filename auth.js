@@ -6,6 +6,17 @@
   var CFG = global.DDOMI_CONFIG || {};
   var client = null;
 
+  /* 화면 파일명은 페이지마다 다를 수 있다(새 디자인 시안은 d_*.html).
+     DDOMI_ROUTES로 덮어쓰지 않으면 현재 운영 파일명을 그대로 쓴다. */
+  var DEFAULT_ROUTES = {
+    home: "index.html", login: "login.html", signup: "signup.html",
+    account: "account.html", admin: "admin.html"
+  };
+  function route(k) {
+    var R = global.DDOMI_ROUTES || {};
+    return R[k] || DEFAULT_ROUTES[k];
+  }
+
   function sb() {
     if (client) return client;
     if (!global.supabase || !CFG.SUPABASE_URL || !CFG.SUPABASE_KEY) return null;
@@ -69,7 +80,7 @@
     if (!c) return Promise.reject(new Error("설정이 아직 없습니다."));
     return c.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: new URL(redirectPath || "account.html", global.location.href).href }
+      options: { redirectTo: new URL(redirectPath || route("account"), global.location.href).href }
     });
   }
 
@@ -119,20 +130,20 @@
     if (!slot) return Promise.resolve(null);
     return getMe().then(function (me) {
       if (!me) {
-        slot.innerHTML = '<a class="btn ghost" href="login.html">로그인</a>' +
-                         '<a class="btn pri" href="signup.html" style="margin-left:8px">가입</a>';
+        slot.innerHTML = '<a class="btn ghost" href="' + route("login") + '">로그인</a>' +
+                         '<a class="btn pri" href="' + route("signup") + '" style="margin-left:8px">가입</a>';
         return null;
       }
       var adminLink = me.isAdmin
-        ? '<a class="btn ghost" href="admin.html" style="margin-right:8px">관리자</a>' : '';
+        ? '<a class="btn ghost" href="' + route("admin") + '" style="margin-right:8px">관리자</a>' : '';
       slot.innerHTML =
         adminLink +
-        '<span class="who">' + (me.username ? '<b>' + me.username + '</b>' : '') +
-        (me.isAdmin ? '<span class="adm-badge">관리자</span>' : '') + '</span>' +
+        '<a class="who" href="' + route("account") + '">' + (me.username ? '<b>' + me.username + '</b>' : '내 계정') +
+        (me.isAdmin ? '<span class="adm-badge">관리자</span>' : '') + '</a>' +
         '<button class="btn ghost" id="navlogout" style="margin-left:12px">로그아웃</button>';
       var b = document.getElementById("navlogout");
       if (b) b.addEventListener("click", function () {
-        signOut().then(function () { global.location.href = "index.html"; });
+        signOut().then(function () { global.location.href = route("home"); });
       });
       return me;
     });
@@ -155,10 +166,10 @@
         gate.innerHTML = me
           ? '<div class="card"><h1 class="t">관리자 전용 화면입니다</h1>' +
             '<p class="sub">이 계정에는 관리자 권한이 없습니다. 권한이 필요하면 운영자에게 문의해 주세요.</p>' +
-            '<a class="btn pri" href="index.html">홈으로</a></div>'
+            '<a class="btn pri" href="' + route("home") + '">홈으로</a></div>'
           : '<div class="card"><h1 class="t">로그인이 필요합니다</h1>' +
             '<p class="sub">관리자 전용 화면입니다. 로그인 후 다시 시도해 주세요.</p>' +
-            '<a class="btn pri" href="login.html">로그인</a></div>';
+            '<a class="btn pri" href="' + route("login") + '">로그인</a></div>';
       }
       return null;
     });

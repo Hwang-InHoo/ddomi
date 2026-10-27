@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>취향 설정 — 또미</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="ui.css">
+<style>
+  html,body{height:100%}
+  .wrap2{display:grid; grid-template-columns:1fr minmax(320px,38%); min-height:100svh}
+  .ask{padding:clamp(34px,4.5vw,64px) clamp(24px,4vw,56px) 110px; display:flex; flex-direction:column; justify-content:center}
+  .steps{display:flex; gap:6px; margin-bottom:26px; flex-wrap:wrap}
+  .steps i{height:3px; width:26px; border-radius:999px; background:var(--line)}
+  .steps i.done{background:var(--main)} .steps i.now{background:var(--ink)}
+  .qn{font-size:12.5px; font-weight:700; color:var(--muted)}
+  .qt{font-size:clamp(25px,3vw,38px); line-height:1.16; letter-spacing:-.02em; font-weight:800; margin:10px 0 0}
+  .qh{font-size:14.5px; color:var(--soft); margin:13px 0 0; max-width:42ch}
+  .opts{display:flex; flex-wrap:wrap; gap:9px; margin:28px 0 0; max-width:640px}
+  .opt{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:12px;
+    padding:14px 18px; font-size:15.5px; font-weight:600; text-align:left; line-height:1.3;
+    transition:background .16s var(--ease), color .16s, border-color .16s}
+  .opt:hover{border-color:var(--ink)}
+  .opt[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .opt small{display:block; font-size:11.5px; opacity:.52; font-weight:500; margin-top:3px}
+  .opt.thin{opacity:.5}
+  .opt.thin small{color:var(--main-deep); opacity:1; font-weight:700}
+
+  .fields{display:flex; gap:10px; flex-wrap:wrap; margin:28px 0 0}
+  .field{display:flex; flex-direction:column; gap:6px}
+  .field span{font-size:12.5px; font-weight:700; color:var(--soft)}
+  .field select{padding:12px 14px; border:1px solid var(--line); border-radius:10px; font:inherit;
+    font-size:15px; background:var(--surface); color:var(--ink)}
+
+  .navrow{position:fixed; left:0; bottom:0; width:62%; background:var(--bg); z-index:30}
+  .navrow .in{padding:18px clamp(24px,4vw,56px) 24px; display:flex; align-items:center; gap:10px}
+
+  /* 오른쪽 — 골격(칸) 미리보기 */
+  .plan{background:var(--sunken); padding:clamp(28px,3.5vw,48px) clamp(20px,2.5vw,36px); overflow:auto}
+  .plan h2{font-size:15px; font-weight:800; letter-spacing:0; margin:0}
+  .plan .sub{font-size:12.5px; color:var(--muted); margin:6px 0 20px}
+  .slot{background:var(--surface); border-radius:14px; padding:16px 18px; margin-bottom:10px;
+    transition:background .2s var(--ease)}
+  .slot.active{background:var(--tint)}
+  .slot .time{font-family:var(--serif); font-size:15px; color:var(--main-deep)}
+  .slot .nm{font-size:16px; font-weight:800; letter-spacing:0; margin:3px 0 0}
+  .slot .picks{display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 0}
+  .slot .picks span{background:var(--sunken); border-radius:999px; padding:4px 10px; font-size:12px; font-weight:600; color:var(--soft)}
+  .slot .none{font-size:12.5px; color:var(--muted); margin:9px 0 0}
+  .plan .foot{font-size:12px; color:var(--muted); line-height:1.6; margin-top:18px}
+
+  /* 결과 */
+  .res{position:fixed; inset:0; z-index:60; background:var(--bg); display:none; overflow:auto}
+  .res.on{display:block}
+  .rin{max-width:720px; margin:0 auto; padding:clamp(44px,6vw,80px) 24px 80px}
+  @media (max-width:900px){
+    .wrap2{grid-template-columns:1fr}
+    .plan{order:-1}
+    .navrow{width:100%}
+    .ask{padding-top:26px}
+  }
+</style>
+</head>
+<body>
+
+<header class="ui-bar">
+  <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".2"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>
+  <a class="wordmark" href="index.html">또미</a>
+  <span class="screen">취향 설정</span>
+  <nav><a href="map.html">맛집 지도</a><a href="course.html">또미가 골라줘</a><a href="about.html">또미 소개</a></nav>
+  <span class="sp"></span>
+  <div id="navauth"></div>
+</header>
+
+<div class="wrap2">
+  <section class="ask">
+    <div class="steps" id="steps"></div>
+    <p class="qn" id="qn"></p>
+    <h1 class="qt" id="qt"></h1>
+    <p class="qh" id="qh"></p>
+    <div id="slotarea"></div>
+    <div class="opts" id="opts"></div>
+  </section>
+
+  <aside class="plan">
+    <h2>오늘의 칸</h2>
+    <p class="sub" id="planSub">장소와 시간을 정하면 칸이 생깁니다</p>
+    <div id="slots"></div>
+    <p class="foot" id="planFoot"></p>
+  </aside>
+</div>
+
+<div class="navrow">
+  <div class="in">
+    <button class="btn quiet" id="prev">이전</button>
+    <span class="sp"></span>
+    <button class="btn quiet" id="skip">건너뛰기</button>
+    <button class="btn pri" id="next">다음</button>
+  </div>
+</div>
+
+<div class="res" id="res">
+  <div class="rin">
+    <h1 class="t1">취향을 저장했습니다</h1>
+    <p class="lede" id="resLede"></p>
+    <div class="sumtags" id="sum" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:20px"></div>
+    <div class="rows" id="slotSummary" style="margin-top:28px"></div>
+    <p class="small" id="resFine" style="margin-top:24px; line-height:1.7"></p>
+    <div style="display:flex; gap:10px; margin-top:26px">
+      <button class="btn line" id="again">다시 고르기</button>
+      <a class="btn pri" href="course.html">이 취향으로 코스 짜기</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="data.js?v=2026103"></script>
+<script>
+(function(){
+if(window.DdomiAuth) DdomiAuth.renderNavState("navauth");
+
+/* ═══ 업종 묶음 — 또미 공공데이터는 업종이 이미 세분화돼 있어 검색어 대신 업종으로 거른다 ═══ */
+var G={
+  한식:["백반/한정식","국/탕/찌개류","김밥/만두/분식","국수/칼국수","냉면/밀면","기타 한식 음식점","전/부침개"],
+  고기:["돼지고기 구이/찜","소고기 구이/찜","족발/보쌈","곱창 전골/구이","닭/오리고기 구이/찜","치킨"],
+  일식:["일식 회/초밥","일식 카레/돈가스/덮밥","일식 면 요리","기타 일식 음식점","복 요리 전문"],
+  중식:["중국집","마라탕/훠궈"],
+  양식:["경양식","피자","파스타/스테이크","버거","토스트/샌드위치/샐러드","기타 서양식 음식점","패밀리레스토랑"],
+  동남아:["베트남식 전문","기타 동남아식 전문"],
+  해산물:["횟집","해산물 구이/찜"],
+  카페:["카페"], 베이커리:["빵/도넛"], 빙수:["아이스크림/빙수"], 떡한과:["떡/한과"],
+  술집:["요리 주점","일반 유흥 주점","생맥주 전문","무도 유흥 주점"]
+};
+var AVOID_G={ "해산물":["해산물"], "돼지고기":["고기"], "고기 전부":["고기","해산물"], "매운 것":[] };
+
+/* ═══ 골격 — 시간만으로 칸을 만든다 (규칙, LLM 없음) ═══ */
+function buildSkeleton(sh, eh){
+  var out=[], lunch=null, dinner=null;
+  var short=(eh-sh)<3;                        /* 짧은 일정이면 식사는 한 번만 */
+
+  if(sh<=13 && eh>=13) lunch={key:"meal", name:"점심", from:Math.max(sh,11), to:Math.min(eh,14)};
+  if(eh>=18 && !(short && lunch)) dinner={key:"meal2", name:"저녁", from:Math.max(sh,17), to:Math.min(eh,21)};
+  if(lunch) out.push(lunch);
+
+  /* 카페는 식사 사이의 빈 시간에 들어간다. 겹치지 않을 때만 만든다. */
+  var cf=null;
+  if(lunch && dinner && dinner.from-lunch.to>=1) cf={from:lunch.to, to:dinner.from};
+  else if(lunch && !dinner && eh-lunch.to>=1)    cf={from:lunch.to, to:Math.min(eh,lunch.to+3)};
+  else if(!lunch && dinner && dinner.from-sh>=1) cf={from:sh, to:dinner.from};
+  if(cf) out.push({key:"cafe", name:"카페", from:cf.from, to:cf.to});
+
+  if(dinner) out.push(dinner);
+
+  var barFrom = dinner? Math.max(21,dinner.to) : 21;
+  if(eh>barFrom) out.push({key:"bar", name:"한 잔", from:barFrom, to:eh});
+
+  if(!out.length) out.push({key:"meal", name:"식사", from:sh, to:eh});
+  out.sort(function(a,b){ return a.from-b.from; });
+  return out;
+}
+
+/* ═══ 문항 — 있는 칸만 묻는다 (formFor) ═══ */
+var COMMON=[
+  { key:"avoid", multi:true, skip:true, t:"못 먹거나<br>피하는 것이 있나요",
+    h:"고르시면 그 업종은 후보에서 아예 빠집니다.",
+    o:[{v:"해산물"},{v:"돼지고기"},{v:"고기 전부"},{v:"매운 것"}] },
+  { key:"budget", skip:true, t:"한 끼에<br>쓰는 돈은", h:"",
+    o:[{v:"만 원 아래"},{v:"1~2만 원"},{v:"2~4만 원"},{v:"자리에 따라"}] },
+  { key:"walk", skip:true, t:"얼마나<br>걸으실 수 있나요", h:"칸과 칸 사이 거리를 정하는 데 씁니다.",
+    o:[{v:"5분 안"},{v:"10분쯤"},{v:"15분도 괜찮아요"}] }
+];
+var SLOTQ={
+  meal:{ t:"점심은<br>어느 쪽으로", g:["한식","고기","일식","중식","양식","동남아","해산물"] },
+  meal2:{ t:"저녁은<br>어느 쪽으로", g:["한식","고기","일식","중식","양식","동남아","해산물"] },
+  cafe:{ t:"카페는<br>어떤 곳으로", g:["카페","베이커리","빙수","떡한과"] },
+  bar:{ t:"한 잔은<br>어디서", g:["술집"] }
+};
+
+var D=null, IDX=null, sido="", sggCode="", dong="", sh=12, eh=19, slots=[], Qs=[], step=0, A={};
+
+function countIn(groups){
+  if(!D) return 0;
+  var cats=[]; groups.forEach(function(g){ (G[g]||[]).forEach(function(c){ if(cats.indexOf(c)<0) cats.push(c); }); });
+  return D.list.filter(function(p){ return p.dong===dong && cats.indexOf(p.category)>-1; }).length;
+}
+
+function formFor(ss){
+  var q=[{key:"__where", t:"어디서<br>언제 만나시나요", h:"여기서 정한 시간으로 칸이 나뉩니다.", where:true}];
+  q=q.concat(COMMON);
+  ss.forEach(function(s){
+    var d=SLOTQ[s.key]; if(!d) return;
+    q.push({ key:"slot:"+s.key, multi:true, skip:true, slot:s, t:d.t,
+      h:"이 동네에 실제로 있는 곳 수를 함께 적었습니다. 8곳 미만은 후보가 잘 안 나옵니다.",
+      o:d.g.map(function(g){ return {v:g, g:[g]}; }) });
+  });
+  return q;
+}
+
+/* ═══ 화면 ═══ */
+function paintSlots(){
+  var box=document.getElementById("slots");
+  if(!slots.length){ box.innerHTML=""; document.getElementById("planFoot").textContent=""; return; }
+  document.getElementById("planSub").textContent=dong+" · "+sh+"시 ~ "+eh+"시 · "+slots.length+"칸";
+  var cur=Qs[step]&&Qs[step].slot?Qs[step].slot.key:null;
+  box.innerHTML=slots.map(function(s){
+    var picks=(A["slot:"+s.key]||[]).map(function(i){ return SLOTQ[s.key].g[i]; });
+    return '<div class="slot'+(cur===s.key?" active":"")+'">'+
+      '<span class="time num">'+s.from+':00 – '+s.to+':00</span>'+
+      '<p class="nm">'+s.name+'</p>'+
+      (picks.length? '<div class="picks">'+picks.map(function(p){return '<span>'+p+'</span>';}).join("")+'</div>'
+                   : '<p class="none">아직 안 고름</p>')+
+      '</div>';
+  }).join("");
+  document.getElementById("planFoot").innerHTML=
+    "칸은 시간만으로 정해집니다. 칸이 없는 종류는 묻지 않습니다 — 점심 칸이 없는데 점심 취향을 묻는 건 이탈만 만듭니다.";
+}
+
+function render(){
+  var q=Qs[step];
+  document.getElementById("steps").innerHTML=Qs.map(function(_,i){
+    return '<i class="'+(i<step?"done":(i===step?"now":""))+'"></i>'; }).join("");
+  document.getElementById("qn").textContent="질문 "+(step+1)+" / "+Qs.length;
+  document.getElementById("qt").innerHTML=q.t;
+  document.getElementById("qh").textContent=q.h||"";
+
+  var sa=document.getElementById("slotarea"), ob=document.getElementById("opts");
+  sa.innerHTML=""; ob.innerHTML="";
+
+  if(q.where){
+    var dongs={}; if(D) D.list.forEach(function(p){ dongs[p.dong]=(dongs[p.dong]||0)+1; });
+    var names=Object.keys(dongs).sort(function(a,b){return dongs[b]-dongs[a];});
+    var sgs=(IDX?sggList(sido):[]);
+    sa.innerHTML='<div class="fields">'+
+      '<label class="field"><span>시 · 도</span><select id="fSido">'+
+        (IDX?IDX.sido:[]).map(function(x){ return '<option value="'+x.name+'"'+(x.name===sido?" selected":"")+'>'+x.name+'</option>'; }).join("")+
+      '</select></label>'+
+      '<label class="field"><span>시 · 군 · 구</span><select id="fSgg">'+
+        sgs.map(function(g){ return '<option value="'+g.code+'"'+(g.code===sggCode?" selected":"")+'>'+g.name+' ('+g.count.toLocaleString("ko-KR")+'곳)</option>'; }).join("")+
+      '</select></label>'+
+      '<label class="field"><span>동네</span><select id="fDong">'+
+        (names.length?names.map(function(n){ return '<option value="'+n+'"'+(n===dong?" selected":"")+'>'+n+' ('+dongs[n].toLocaleString("ko-KR")+'곳)</option>'; }).join("")
+                     :'<option>불러오는 중…</option>')+
+      '</select></label>'+
+      '<label class="field"><span>시작</span><select id="fS">'+hours(10,20,sh)+'</select></label>'+
+      '<label class="field"><span>끝</span><select id="fE">'+hours(12,24,eh)+'</select></label></div>';
+    document.getElementById("fSido").onchange=function(e){ sido=e.target.value; loadSgg(sggList(sido)[0]); };
+    document.getElementById("fSgg").onchange=function(e){ loadSgg(byCode(e.target.value)); };
+    document.getElementById("fDong").onchange=function(e){ dong=e.target.value; regen(); };
+    document.getElementById("fS").onchange=function(e){ sh=+e.target.value; if(eh<=sh) eh=sh+1; regen(); };
+    document.getElementById("fE").onchange=function(e){ eh=+e.target.value; if(eh<=sh) sh=eh-1; regen(); };
+  }else{
+    ob.innerHTML=q.o.map(function(o,i){
+      var sel=(A[q.key]||[]).indexOf(i)>-1, tail="", thin=false;
+      if(o.g){ var n=countIn(o.g); thin=n<8;
+        tail='<small>'+(n?n.toLocaleString("ko-KR")+'곳':'이 동네엔 없음')+(thin&&n?' · 적어요':'')+'</small>'; }
+      return '<button class="opt'+(thin?" thin":"")+'" data-i="'+i+'" aria-pressed="'+sel+'">'+o.v+tail+'</button>';
+    }).join("");
+    Array.prototype.forEach.call(ob.children,function(b){ b.onclick=function(){ pick(q,+b.getAttribute("data-i")); }; });
+  }
+
+  document.getElementById("prev").style.visibility=step?"visible":"hidden";
+  document.getElementById("skip").style.display=q.where?"none":"";
+  document.getElementById("next").textContent=step===Qs.length-1?"다 골랐어요":"다음";
+  paintSlots();
+}
+function hours(a,b,sel){
+  var s=""; for(var h=a;h<=b;h++) s+='<option value="'+h+'"'+(h===sel?" selected":"")+'>'+h+'시</option>';
+  return s;
+}
+function regen(){ slots=buildSkeleton(sh,eh); Qs=formFor(slots); render(); }
+
+function pick(q,i){
+  A[q.key]=A[q.key]||[];
+  var at=A[q.key].indexOf(i);
+  if(q.multi){ at>-1? A[q.key].splice(at,1) : A[q.key].push(i); }
+  else A[q.key]=[i];
+  Array.prototype.forEach.call(document.getElementById("opts").children,function(b,j){
+    b.setAttribute("aria-pressed", A[q.key].indexOf(j)>-1); });
+  paintSlots();
+}
+
+document.getElementById("next").onclick=function(){ step<Qs.length-1? (step++, render()) : finish(); };
+document.getElementById("prev").onclick=function(){ if(step){ step--; render(); } };
+document.getElementById("skip").onclick=function(){ step<Qs.length-1? (step++, render()) : finish(); };
+
+function finish(){
+  var tags=[];
+  Qs.forEach(function(q){
+    if(q.where) return;
+    (A[q.key]||[]).forEach(function(i){
+      tags.push(q.key==="avoid"? q.o[i].v+" 빼고" : q.o[i].v);
+    });
+  });
+  document.getElementById("resLede").textContent=dong+" · "+sh+"시~"+eh+"시 기준으로 "+slots.length+"칸이 생겼습니다.";
+  document.getElementById("sum").innerHTML=tags.map(function(t){
+    return '<span style="background:var(--sunken);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:600;color:var(--soft)">'+t+'</span>'; }).join("");
+
+  document.getElementById("slotSummary").innerHTML=slots.map(function(s){
+    var sel=(A["slot:"+s.key]||[]).map(function(i){ return SLOTQ[s.key].g[i]; });
+    var n=sel.length? countIn(sel) : 0;
+    return '<div><b style="font-size:15.5px">'+s.name+'</b> <span class="small">'+s.from+':00–'+s.to+':00</span>'+
+      '<div class="small" style="margin-top:5px">'+(sel.length
+        ? sel.join(" · ")+' — 이 동네에 '+n.toLocaleString("ko-KR")+'곳'
+        : '고르지 않음 — 이 칸은 업종을 좁히지 않고 추천합니다')+'</div></div>';
+  }).join("");
+
+  document.getElementById("resFine").innerHTML=
+    "지금 후보를 좁히는 데 쓰는 것은 <b>동네 · 시간 · 업종 · 못 먹는 것</b>입니다. "+
+    "예산과 걷는 거리는 가게마다 확인된 데이터가 없어 <b>저장만 해 둡니다.</b><br>"+
+    "고른 이력이 쌓이면 다음 추천의 기본값을 미리 채우는 데 먼저 씁니다. "+
+    "<b>10~15회쯤 쌓이기 전에는 추천 순위를 바꾸지 않습니다</b> — 데이터가 없는데 알고리즘이 작동하는 척하면 신뢰를 잃습니다.";
+  document.getElementById("res").classList.add("on");
+}
+document.getElementById("again").onclick=function(){
+  document.getElementById("res").classList.remove("on"); step=0; A={}; render();
+};
+
+function sggList(name){
+  var a=(IDX?IDX.sido:[]); for(var i=0;i<a.length;i++) if(a[i].name===name) return a[i].sigungu;
+  return [];
+}
+function byCode(c){
+  var all=IDX?IDX.sigunguAll:[]; for(var i=0;i<all.length;i++) if(all[i].code===c) return all[i];
+  return null;
+}
+/* 고른 시군구 파일만 불러온다 — 전국을 한꺼번에 들면 브라우저가 멈춘다 */
+function loadSgg(g){
+  if(!g) return;
+  sggCode=g.code; D=null; dong=""; regen();
+  Ddomi.region(g.code).then(function(r){
+    if(sggCode!==g.code) return;
+    D=r;
+    var c={}; r.list.forEach(function(p){ c[p.dong]=(c[p.dong]||0)+1; });
+    var names=Object.keys(c).sort(function(a,b){return c[b]-c[a];});
+    dong=names[0]||""; regen();
+  });
+}
+
+Ddomi.index().then(function(idx){
+  IDX=idx; sido=idx.sido[0].name;
+  loadSgg(sggList(sido)[0]);
+});
+})();
+</script>
+</body>
+</html>

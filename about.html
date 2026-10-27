@@ -2,79 +2,94 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>또미 소개 — 또 가고 싶은 진짜 맛집</title>
-<meta name="description" content="또미가 광고·조작과 분리된 객관적 맛집 평가를 만드는 방법.">
-<meta name="theme-color" content="#F47920">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="또미">
-<meta property="og:title" content="또미 소개 — 또 가고 싶은 진짜 맛집">
-<meta property="og:description" content="광고가 아니라 신뢰로 점수를 매기는 맛집 평가.">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="style.css">
+<title>또미 소개 — 또미</title>
+<meta name="description" content="광고가 아니라 신뢰로 점수를 매기는 맛집 평가. 또미가 다른 네 가지 이유.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="ui.css">
+<style>
+  /* 넓은 화면에서는 제목을 왼쪽에 고정하고 본문을 오른쪽에 펼친다 — 가운데 좁은 기둥으로
+     두면 양옆이 비어 보이고, 그렇다고 한 줄을 끝까지 늘리면 읽기가 힘들어지기 때문이다. */
+  .doc{display:grid; gap:56px; align-items:start}
+  .doc h1{font-size:clamp(30px,3.4vw,44px); line-height:1.18; letter-spacing:-.02em; font-weight:800; margin:0}
+  .doc .sub{font-size:16.5px; color:var(--soft); margin:14px 0 0; line-height:1.6}
+  .lead{margin:0; font-size:17px; color:var(--ink); line-height:1.7}
+  .secs{display:grid; gap:34px 48px; margin-top:38px}
+  .secs h2{font-size:18.5px; font-weight:800; margin:0 0 9px}
+  .secs p{margin:0; font-size:15.5px; color:var(--soft); line-height:1.75}
+  .secs p strong, .secs p b{color:var(--ink)}
+  @media (min-width:1000px){
+    .doc{grid-template-columns:330px minmax(0,1fr)}
+    .doc-head{position:sticky; top:84px}
+    .secs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+</style>
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a class="logo" href="index.html">
-      <svg class="logomark" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg>
-      <span class="brandtext">또미</span>
-    </a>
-    <button class="menu-toggle" aria-label="메뉴" onclick="document.getElementById('menu').classList.toggle('open')">☰</button>
-    <div class="menu" id="menu">
-      <a href="index.html">홈</a>
-      <a href="about.html" class="active">또미 소개</a>
-      <a href="map.html">맛집 지도</a>
-      <a href="reviewer.html">미식가 모집</a>
-      <a href="index.html#waitlist" class="cta">대기자 등록</a>
+<header class="ui-bar">
+  <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".2"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>
+  <a class="wordmark" href="index.html">또미</a>
+  <nav><a href="map.html">맛집 지도</a><a href="course.html">또미가 골라줘</a><a href="about.html" aria-current="page">또미 소개</a></nav>
+  <span class="sp"></span>
+  <div id="navauth"></div>
+</header>
+
+<main class="page-wrap">
+  <div class="doc">
+    <div class="doc-head">
+      <h1>또미는 왜 다를까요?</h1>
+      <p class="sub">광고가 아니라 신뢰로 점수를 매기는 맛집 평가</p>
+    </div>
+
+    <div>
+      <p class="lead">어떤 후기는 영수증 한 장으로 만들어지고, 어떤 후기는 대가를 받고 쓰입니다. 그런데 화면에는 똑같은 별 다섯 개로 보이죠. "정말 맛있어서" 올라온 글인지 "돈을 받아서" 올라온 글인지 가려낼 방법이 없습니다. 또미는 이 문제를 정면으로 풉니다.</p>
+
+      <div class="secs">
+        <section>
+          <h2>신뢰 가중 평가</h2>
+          <p>모든 가게는 같은 출발선에서 시작합니다. 그리고 누구나 똑같은 한 표가 아니라, 오랫동안 정직하게 평가해온 미식가의 한 표에 더 큰 무게를 둡니다. 그래서 계정 몇 개로 점수를 띄우는 조작이 통하지 않습니다.</p>
+        </section>
+        <section>
+          <h2>광고와 점수의 완전 분리</h2>
+          <p>또미는 광고로 점수를 팔지 않습니다. 음식점이 돈을 내도 점수는 1점도 오르지 않아요. 우리가 돈을 버는 방식과 점수를 매기는 방식을 구조적으로 떼어놓기 때문에, 점수를 끝까지 지킬 수 있습니다.</p>
+        </section>
+        <section>
+          <h2>재방문 기반</h2>
+          <p>가장 정직한 신호는 "또 갈 것인가"입니다. 또미는 한 번의 방문 인증과 재방문 의향을 중심으로, 실제로 다시 가고 싶은 곳을 가려냅니다.</p>
+        </section>
+        <section>
+          <h2>조작을 막는 설계</h2>
+          <p>신뢰를 쌓은 미식가가 매수되더라도, 한 사람이 점수를 흔들 수 없도록 영향력을 분산하고, 이상 패턴을 잡아내며, 적발 시 그동안 쌓은 신뢰를 모두 잃게 합니다. 조작의 비용을 감당할 수 없을 만큼 높이는 것이 또미의 객관성입니다.</p>
+        </section>
+      </div>
+
+      <div class="panelbox" style="margin-top:44px">
+        <p style="margin:0; font-size:16px; color:var(--ink); font-weight:700">또미는 "최고의 앱"을 만드는 게 아니라, 믿을 수 있는 기준을 만듭니다.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px">
+          <a class="btn pri" href="map.html">맛집 지도 열어보기</a>
+          <a class="btn line" href="reviewer.html">씨앗 미식가 신청</a>
+        </div>
+      </div>
     </div>
   </div>
-</nav>
+</main>
 
-<div class="wrap">
-  <header class="pagehead anim d1">
-    <h1>또미는 왜 다를까요?</h1>
-    <p>광고가 아니라 신뢰로 점수를 매기는 맛집 평가</p>
-  </header>
-
-  <section>
-    <div class="prose">
-      <p class="lead anim d2">네이버 지도엔 가짜 영수증 리뷰가 넘치고, 인스타엔 표시 없는 뒷광고가 가득합니다. "정말 맛있어서" 올라온 후기인지, "돈을 받아서" 올라온 후기인지 구분할 길이 없죠. 또미는 이 문제를 정면으로 풉니다.</p>
-
-      <h2 class="t1">1. 신뢰 가중 평가</h2>
-      <p>모든 가게는 같은 출발선에서 시작합니다. 그리고 누구나 똑같은 한 표가 아니라, <strong>오랫동안 정직하게 평가해온 미식가의 한 표에 더 큰 무게</strong>를 둡니다. 그래서 계정 몇 개로 점수를 띄우는 조작이 통하지 않습니다.</p>
-
-      <h2 class="t2">2. 광고와 점수의 완전 분리</h2>
-      <p>또미는 광고로 점수를 팔지 않습니다. 음식점이 돈을 내도 점수는 1점도 오르지 않아요. 우리가 돈을 버는 방식과 점수를 매기는 방식을 <strong>구조적으로 떼어놓기</strong> 때문에, 점수를 끝까지 지킬 수 있습니다.</p>
-
-      <h2 class="t3">3. 재방문 기반</h2>
-      <p>가장 정직한 신호는 "또 갈 것인가"입니다. 또미는 한 번의 방문 인증과 재방문 의향을 중심으로, <strong>실제로 다시 가고 싶은 곳</strong>을 가려냅니다.</p>
-
-      <h2 class="t4">4. 조작을 막는 설계</h2>
-      <p>신뢰를 쌓은 미식가가 매수되더라도, 한 사람이 점수를 흔들 수 없도록 영향력을 분산하고, 이상 패턴을 잡아내며, 적발 시 그동안 쌓은 신뢰를 모두 잃게 합니다. <strong>조작의 비용을 감당할 수 없을 만큼 높이는 것</strong>이 또미의 객관성입니다.</p>
-
-      <p class="lead" style="margin-top:30px;">또미는 "최고의 앱"을 만드는 게 아니라, <strong>믿을 수 있는 기준</strong>을 만듭니다.</p>
-    </div>
-    <div style="text-align:center; margin-top:40px;">
-      <a href="index.html#waitlist" class="btn-primary">출시 알림 받기</a>
-    </div>
-  </section>
-</div>
-
-<footer>
-  <div class="wrap">
-    <a class="logo" href="index.html"><svg class="logomark" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5C19.8 5 10 14.5 10 26.3 10 41 32 59 32 59s22-18 22-32.7C54 14.5 44.2 5 32 5z" fill="#F47920"/><path d="M21 23a11 9 0 0 0 22 0z" fill="#FFF7E6"/></svg><span class="brandtext">또미</span></a>
-    <div>또 가고 싶은 진짜 맛집 · DDOMI</div>
-    <div style="margin-top:6px; font-size:13px;"><a href="privacy.html" style="color:var(--accent-dark);">개인정보처리방침</a></div>
+<footer class="ui-foot">
+  <div class="in">
+    <strong style="font-size:17px">또미</strong>
+    <div class="links"><a href="map.html">맛집 지도</a><a href="course.html">또미가 골라줘</a><a href="about.html">또미 소개</a><a href="reviewer.html">씨앗 미식가</a><a href="privacy.html">개인정보처리방침</a></div>
+    <p class="copy">© 2026 또미 · DDOMI</p>
   </div>
 </footer>
 
-<script>
-  document.querySelectorAll('#menu a').forEach(function(a){ a.addEventListener('click', function(){ document.getElementById('menu').classList.remove('open'); }); });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>if(window.DdomiAuth) DdomiAuth.renderNavState("navauth");</script>
+
 
 </body>
 </html>

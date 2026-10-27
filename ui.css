@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════
+   또미 공통 디자인 시스템
+   s1 랜딩 · s2 취향설정 · s3 코스에서 쓰던 값을 한 파일로 모았다.
+   규칙: 선 대신 면의 톤 차이로 나눈다 · 색은 행동과 데이터에만 ·
+         제목 위 라벨 없음 · 01 02 03 번호 없음 · 그라디언트·유리 효과 없음.
+   ═══════════════════════════════════════════════════ */
+:root{
+  /* 브랜드 정본 (00_brand_guide.md) */
+  --main:#F47920; --main-deep:#D9650F; --cream:#FDEFC2; --teal:#1D9E75;
+  /* 면 — 밝은 쪽부터 */
+  --surface:#FFFFFF; --bg:#FFFCF2; --sunken:#FAF4E4; --tint:#FDEAD8;
+  /* 글자 */
+  --ink:#2A2620; --soft:#5A554C; --muted:#8A8070;
+  --line:#F0E6CC;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --font:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",system-ui,-apple-system,sans-serif;
+  --serif:"Fraunces",Georgia,serif;
+  --maxw:1160px;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font);
+  line-height:1.6; letter-spacing:0; -webkit-font-smoothing:antialiased;
+  word-break:keep-all; overflow-wrap:break-word}  /* 한글은 어절 중간에서 끊지 않는다 */
+a{color:inherit; text-decoration:none}
+button{font-family:inherit; cursor:pointer}
+.num{font-family:var(--serif); font-variant-numeric:tabular-nums; font-weight:600; letter-spacing:0}
+.dash{color:var(--muted)}
+.sp{flex:1}
+
+/* ── 상단 바 — 선 없이 한 단계 밝은 면으로 분리 ── */
+.ui-bar{display:flex; align-items:center; gap:16px; padding:14px 22px; background:var(--surface)}
+.ui-bar .mark{width:26px; height:26px; flex:0 0 auto; color:var(--main)}
+.ui-bar .wordmark{font-weight:800; font-size:17px; letter-spacing:-.02em; color:var(--main)}
+.ui-bar .screen{font-size:15px; font-weight:700; margin-left:14px}
+.ui-bar nav{display:flex; gap:4px; margin-left:18px}
+.ui-bar nav a{font-size:14px; font-weight:600; color:var(--soft); padding:7px 11px; border-radius:8px}
+.ui-bar nav a:hover{color:var(--ink); background:var(--sunken)}
+.ui-bar nav a[aria-current="page"]{color:var(--ink); background:var(--sunken)}
+.ui-bar #navauth{display:flex; align-items:center; gap:8px; flex:0 0 auto; white-space:nowrap}
+.ui-bar #navauth .btn{margin:0 !important}
+.ui-bar .who{font-size:12.5px; color:var(--soft); font-weight:600}
+.ui-bar .who b{color:var(--main-deep)}
+
+/* ── 버튼 ── */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  border:1px solid transparent; font-weight:700; border-radius:10px; padding:11px 20px; font-size:15px;
+  transition:background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease)}
+.btn.pri{background:var(--ink); color:var(--bg)}
+.btn.pri:hover{background:var(--main-deep)}
+.btn.accent{background:var(--main); color:#fff}
+.btn.accent:hover{background:var(--main-deep)}
+.btn.line{background:var(--surface); color:var(--ink); border-color:var(--line)}
+.btn.line:hover{border-color:var(--ink)}
+.btn.quiet{background:transparent; color:var(--soft)}
+.btn.quiet:hover{color:var(--ink)}
+.btn.full{width:100%; padding:14px 20px; font-size:16px}
+.btn.sm{padding:8px 14px; font-size:13.5px; border-radius:8px}
+.btn:disabled{background:var(--line); color:var(--muted); cursor:not-allowed; border-color:transparent}
+
+/* ── 칩 ── */
+.chip{border:1px solid var(--line); background:var(--bg); color:var(--soft); border-radius:8px;
+  padding:7px 13px; font-size:13.5px; font-weight:600;
+  transition:background .16s var(--ease), color .16s var(--ease), border-color .16s var(--ease)}
+.chip:hover{border-color:var(--ink); color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+
+/* ── 면 ── */
+.card{background:var(--surface); border-radius:20px; padding:30px}
+.panelbox{background:var(--sunken); border-radius:16px; padding:20px}
+
+/* ── 글 ── */
+.t1{font-size:clamp(26px,3.2vw,38px); line-height:1.15; letter-spacing:-.02em; font-weight:800; margin:0}
+.t2{font-size:20px; font-weight:800; letter-spacing:0; margin:0}
+.t3{font-size:16px; font-weight:700; letter-spacing:0; margin:0}
+.lede{font-size:15px; color:var(--soft); margin:12px 0 0}
+.small{font-size:12.5px; color:var(--muted)}
+
+/* ── 폼 ── */
+.fl{display:block; font-size:13px; font-weight:700; margin:16px 0 6px}
+.fi{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+  font:inherit; font-size:15px; background:var(--surface); color:var(--ink)}
+.fi:focus{outline:none; border-color:var(--main)}
+.hint{font-size:12.5px; color:var(--muted); margin:6px 0 0}
+.hint.bad{color:var(--main-deep); font-weight:700}
+.hint.ok{color:var(--teal); font-weight:700}
+.sep{text-align:center; margin:24px 0; color:var(--muted); font-size:12.5px; font-weight:600}
+
+/* ── 알림 ── */
+.msg{margin:16px 0 0; padding:12px 14px; border-radius:10px; font-size:13.5px; line-height:1.55; display:none}
+.msg.show{display:block}
+.msg.err{background:var(--tint); color:#7A2E00}
+.msg.ok{background:#E7F5EF; color:#0C5C41}
+.msg.info{background:var(--sunken); color:var(--soft)}
+
+/* ── 목록 — 줄 대신 번갈아 깔리는 면 ── */
+.rows{border-radius:16px; overflow:hidden}
+.rows > *{background:var(--surface); padding:16px 20px}
+.rows > *:nth-child(even){background:var(--sunken)}
+
+/* ── 배지 ── */
+.badge{display:inline-block; font-size:11.5px; font-weight:800; color:#fff; background:var(--main);
+  padding:3px 9px; border-radius:999px; vertical-align:middle; margin-left:7px}
+.badge.quiet{background:var(--muted)}
+
+/* ── 레이아웃 ── */
+.center-wrap{max-width:460px; margin:0 auto; padding:56px 24px 80px}
+.page-wrap{max-width:var(--maxw); margin:0 auto; padding:48px 24px 80px}
+.app-shell{display:grid; grid-template-rows:auto 1fr; height:100svh}
+
+footer.ui-foot{background:var(--surface); padding:44px 0 60px; margin-top:48px}
+footer.ui-foot .in{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+footer.ui-foot .links{display:flex; gap:20px; font-size:13.5px; color:var(--soft); margin-top:14px; flex-wrap:wrap}
+footer.ui-foot .copy{font-size:12.5px; color:var(--muted); margin-top:20px}
+
+@media (max-width:640px){
+  /* 좁은 화면에서도 길을 없애지 않는다 — 바를 두 줄로 접는다 */
+  .ui-bar{flex-wrap:wrap; gap:10px; padding:12px 16px}
+  .ui-bar nav{order:3; width:100%; margin-left:0; gap:2px; overflow-x:auto;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch}
+  .ui-bar nav::-webkit-scrollbar{display:none}
+  .ui-bar nav a{padding:7px 10px; font-size:13.5px; white-space:nowrap}
+  .ui-bar .wordmark{white-space:nowrap}
+  .ui-bar .screen{margin-left:0; font-size:14px; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .center-wrap{padding:36px 16px 64px}
+  .card{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
