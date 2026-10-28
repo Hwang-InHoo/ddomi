@@ -38,57 +38,28 @@ window.DdomiPlace = (function () {
            esc((p.sigungu || "") + " " + (p.dong || "")).trim() +
            (opts.meLabel ? ' · ' + esc(opts.meLabel) : '') + '</p>');
 
+    /* 주소는 한 줄로만 남긴다. "기본 정보" 표를 걷어내면서 주소까지 사라지면
+       어디 있는 집인지 알 수 없게 되므로 제목 바로 밑으로 올렸다. */
+    if (a) h.push('<p class="daddr">' + esc(a) + '</p>');
+    if (opts.walk) {
+      h.push('<p class="daddr">' + esc(opts.walk.label) + ' ' +
+             (opts.walk.dist ? '도보 약 ' + walkMin(opts.walk.dist) + '분 · ' +
+                               Math.round(opts.walk.dist) + 'm' : '첫 칸') + '</p>');
+    }
+
+    /* 점수와 방문 횟수. 둘 다 비어 있는 것이 지금은 정상이고, 비어 있다는 사실
+       자체가 정보다 — 없는 숫자를 지어내지 않는다. */
     h.push('<div class="score"><span class="v">—</span>' +
            '<span class="k"><b>또미 미식점수</b>방문 평가가 한 건도 없어 점수를 낼 수 없습니다. ' +
            '표본이 10~15회 쌓이기 전에는 순위를 바꾸지 않습니다.</span></div>');
 
-    h.push('<p class="lv">점수를 떠받치는 세 가지</p>');
-
-    h.push('<div class="layer"><div class="lh"><span class="ln">버틴 시간</span><span class="lvv">—</span></div>' +
-           '<p class="lb">인허가일부터 지금까지 영업한 기간. 광고로 살 수 없는 신호입니다. ' +
-           '<b>아직 붙지 않은 데이터입니다.</b></p></div>');
-
-    h.push('<div class="layer alt"><div class="lh"><span class="ln">광고 노출도</span><span class="lvv">—</span></div>' +
-           '<p class="lb">검색 결과에서 협찬·광고 표기가 붙은 글의 비율. 알려진 정도이지 맛의 평가가 아닙니다. ' +
-           '<b>아직 집계하지 않았습니다.</b></p></div>');
-
-    h.push('<div class="layer"><div class="lh"><span class="ln">방문 평가</span><span class="lvv">0건</span></div>' +
-           '<p class="lb">실제로 다녀온 사람의 평가. 네 단계 검증을 거쳐 반영됩니다. ' +
-           '<b>씨앗 미식가 모집 전이라 0건입니다.</b></p>' +
-           '<div class="bar"><i style="--w:0%"></i></div></div>');
-
-    h.push('<p class="pnote">세 가지를 한 숫자로 합치지 않습니다. 따로 보여주고 판단은 맡깁니다.</p>');
+    h.push('<div class="visit"><span class="vk">방문 평가</span>' +
+           '<b class="vv">' + (opts.visits == null ? 0 : opts.visits) + '건</b></div>');
 
     if (opts.reason) {
       h.push('<p class="lv">왜 이 집이 떴는가</p>');
       h.push('<div class="layer"><p class="lb" style="margin:0">' + esc(opts.reason) + '</p></div>');
     }
-
-    h.push('<p class="lv">기본 정보</p><dl style="margin:0">');
-    if (opts.walk) {
-      h.push('<div class="kv"><dt>' + esc(opts.walk.label) + '</dt><dd>' +
-             (opts.walk.dist ? '도보 약 ' + walkMin(opts.walk.dist) + '분 · ' +
-                               Math.round(opts.walk.dist) + 'm' : '첫 칸') + '</dd></div>');
-    }
-    h.push('<div class="kv"><dt>주소</dt><dd>' + esc(a || "—") + '</dd></div>');
-    h.push('<div class="kv"><dt>업종</dt><dd>' + esc(p.category) + '</dd></div>');
-    h.push('<div class="kv"><dt>좌표</dt><dd>' + p.lat.toFixed(5) + ', ' + p.lng.toFixed(5) + '</dd></div>');
-    h.push('<div class="kv"><dt>영업시간</dt><dd>미확인</dd></div>');
-    h.push('<div class="kv"><dt>전화</dt><dd>미확인</dd></div>');
-    h.push('<div class="kv"><dt>출처</dt><dd>소상공인시장진흥공단 상가업소정보</dd></div>');
-    h.push('</dl>');
-    h.push('<p class="pnote">영업시간과 전화번호는 공공데이터에 없어 또미도 아직 가지고 있지 않습니다. ' +
-           '추정해 채우지 않습니다.</p>');
-
-    h.push('<p class="lv">가는 길</p><div class="pgo">' +
-           '<a class="btn line sm" target="_blank" rel="noopener noreferrer" ' +
-           'href="https://map.kakao.com/link/to/' + encodeURIComponent(p.name) + ',' +
-           p.lat + ',' + p.lng + '">카카오맵 길찾기</a>' +
-           '<a class="btn line sm" target="_blank" rel="noopener noreferrer" ' +
-           'href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng +
-           '">구글 지도 길찾기</a>' +
-           '<button class="btn quiet sm" type="button" data-copy="' + esc(a) + '">주소 복사</button>' +
-           '</div>');
 
     if (opts.similar && opts.similar.length) {
       h.push('<p class="lv">같은 동네, 같은 업종</p>');

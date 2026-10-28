@@ -25,17 +25,16 @@
 .layer .ln{font-size:14.5px; font-weight:800}
 .layer .lvv{font-family:var(--serif); font-size:15px; color:var(--muted)}
 .layer .lb{font-size:12.5px; color:var(--soft); margin:6px 0 0; line-height:1.6}
-.bar{height:6px; border-radius:999px; background:var(--line); margin-top:10px; overflow:hidden}
-.bar i{display:block; height:100%; background:var(--main); width:var(--w,0)}
+/* 주소 한 줄 — "기본 정보" 표를 걷어내고 남긴 최소한의 사실 */
+.daddr{font-size:13px; color:var(--soft); margin:7px 0 0; line-height:1.5}
 
-.kv{display:flex; justify-content:space-between; gap:12px; padding:10px; font-size:13px}
-.kv:nth-child(odd){background:var(--sunken); border-radius:8px}
-.kv dt{color:var(--muted); flex:none}
-.kv dd{margin:0; font-weight:600; text-align:right; min-width:0}
-
-/* 길찾기 — 영업시간·전화가 없으니 최소한 가는 길은 바로 열어 준다 */
-.pgo{display:flex; gap:7px; margin-top:10px; flex-wrap:wrap}
-.pgo .btn{flex:1 1 auto; min-width:120px}
+/* 방문 횟수 — 점수가 비어 있어도 이 숫자는 늘 보여야 한다.
+   몇 명이 실제로 다녀왔는지가 점수의 근거이자 지금은 유일한 실측값이다. */
+.visit{display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  background:var(--surface); border-radius:14px; padding:14px 17px; margin-top:8px}
+.visit .vk{font-size:14.5px; font-weight:800}
+.visit .vv{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--main-deep);
+  font-variant-numeric:tabular-nums}
 
 /* 같은 동네 비슷한 집 */
 .simi{display:block; background:var(--surface); border-radius:12px; padding:13px 15px; margin-top:7px;
