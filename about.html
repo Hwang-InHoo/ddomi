@@ -16,23 +16,8 @@
   :root{--night:#1B160F; --on-night:#FFF8EC; --ease:cubic-bezier(.22,.61,.36,1)}
   body{background:var(--bg)}
 
-  /* ── 상단바: 머리띠 위에서는 투명, 지나가면 크림 ── */
-  .ui-bar{position:fixed; top:0; left:0; right:0; z-index:40;
-    background:transparent; color:var(--on-night);
-    transition:background .3s var(--ease), color .3s var(--ease)}
-  .ui-bar .wordmark{color:var(--on-night)}
-  .ui-bar nav a{color:rgba(255,248,236,.76)}
-  .ui-bar nav a:hover,.ui-bar nav a[aria-current="page"]{color:var(--on-night); background:rgba(255,255,255,.1)}
-  .ui-bar #navauth .btn{background:none; box-shadow:none; color:inherit}
-  .ui-bar #navauth .btn:hover{background:rgba(255,255,255,.12)}
-  .ui-bar #navauth .btn.pri{box-shadow:inset 0 0 0 1.5px rgba(255,248,236,.34)}
-  .ui-bar.solid{background:rgba(255,252,242,.92); color:var(--ink);
-    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px)}
-  .ui-bar.solid .wordmark{color:var(--main)}
-  .ui-bar.solid nav a{color:var(--soft)}
-  .ui-bar.solid nav a:hover,.ui-bar.solid nav a[aria-current="page"]{color:var(--ink); background:var(--sunken)}
-  .ui-bar.solid #navauth .btn:hover{background:var(--sunken)}
-  .ui-bar.solid #navauth .btn.pri{box-shadow:inset 0 0 0 1.5px var(--line)}
+  /* 상단바(머리띠 위 투명 → 지나가면 크림)는 ui.css의 .ui-bar.over가 맡는다.
+     index.html과 같은 것을 써야 페이지를 오갈 때 자리가 튀지 않는다. */
 
   /* ══════════ 머리띠 — 꺼지는 말들 ══════════
      또미가 끄려는 말들이 깔려 있다가 글자 쪽부터 차례로 꺼진다.
@@ -248,7 +233,7 @@
 </head>
 <body>
 
-<header class="ui-bar">
+<header class="ui-bar over">
   <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" fill="currentColor" opacity=".2"/><path d="M12 22s7-6.16 7-12A7 7 0 0 0 5 10c0 5.84 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>
   <a class="wordmark" href="index.html">또미</a>
   <nav><a href="map.html">맛집 지도</a><a href="course.html">또미가 골라줘</a><a href="about.html" aria-current="page">또미 소개</a></nav>

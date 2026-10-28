@@ -53,6 +53,38 @@ button{font-family:inherit; cursor:pointer}
 .ui-bar .who{font-size:12.5px; color:var(--soft); font-weight:600}
 .ui-bar .who b{color:var(--main-deep)}
 
+/* ── 어두운 머리띠 위에 떠 있는 상단바 (.over) ──
+   첫 화면과 소개 페이지가 같은 동작을 각자 따로 구현해 두고 있었다.
+   index는 .topbar라는 전용 클래스로(로고 20px·메뉴 14.5px),
+   about은 .ui-bar를 자기 파일에서 덮어써서(로고 17px·메뉴 14px).
+   그래서 페이지를 오가면 로고 크기와 메뉴 자리가 튀었다. 한 벌로 합친다.
+
+   여기서는 색만 바꾼다 — 높이·여백·글자 크기는 위의 기본 .ui-bar 그대로다.
+   그래야 어느 페이지로 가든 상단바가 같은 자리에 같은 크기로 있는다. */
+.ui-bar.over{position:fixed; top:0; left:0; right:0; z-index:40;
+  background:transparent; color:var(--on-night, #FFF8EC);
+  transition:background .3s var(--ease), color .3s var(--ease)}
+.ui-bar.over .wordmark{color:var(--on-night, #FFF8EC)}
+.ui-bar.over nav a{color:rgba(255,248,236,.76)}
+.ui-bar.over nav a:hover,
+.ui-bar.over nav a[aria-current="page"]{color:var(--on-night, #FFF8EC); background:rgba(255,255,255,.1)}
+.ui-bar.over .who{color:inherit}
+.ui-bar.over #navauth .btn{background:none; box-shadow:none; color:inherit}
+.ui-bar.over #navauth .btn:hover{background:rgba(255,255,255,.12)}
+.ui-bar.over #navauth .btn.pri{box-shadow:inset 0 0 0 1.5px rgba(255,248,236,.34)}
+
+/* 머리띠를 지나 내려가면 크림 바탕이 깔린다 */
+.ui-bar.over.solid{background:rgba(255,252,242,.92); color:var(--ink);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  box-shadow:inset 0 -1px 0 var(--line)}   /* taste-skill-ignore */
+.ui-bar.over.solid .wordmark{color:var(--main)}
+.ui-bar.over.solid nav a{color:var(--soft)}
+.ui-bar.over.solid nav a:hover,
+.ui-bar.over.solid nav a[aria-current="page"]{color:var(--ink); background:var(--sunken)}
+.ui-bar.over.solid .who{color:var(--soft)}
+.ui-bar.over.solid #navauth .btn:hover{background:var(--sunken)}
+.ui-bar.over.solid #navauth .btn.pri{box-shadow:inset 0 0 0 1.5px var(--line)}
+
 /* ── 버튼 ── */
 .btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;
   border:1px solid transparent; font-weight:700; border-radius:10px; padding:11px 20px; font-size:15px;
