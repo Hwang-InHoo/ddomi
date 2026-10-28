@@ -38,7 +38,7 @@
      또미가 끄려는 말들이 깔려 있다가 글자 쪽부터 차례로 꺼진다.
      끄는 일 자체가 또미가 하는 일이라 이 움직임이 곧 설명이다. */
   .hero{position:relative; overflow:hidden; background:var(--night); color:var(--on-night);
-    padding:152px var(--gutter) 92px; min-height:400px}
+    padding:150px var(--gutter) 98px; min-height:clamp(400px, 47vh, 480px)}
   .hero .in{position:relative; width:100%; max-width:var(--maxw); margin:0 auto}
   .hero h1{margin:0; font-size:clamp(34px,4.4vw,58px); line-height:1.14;
     letter-spacing:-.028em; font-weight:800}
@@ -417,12 +417,20 @@
     var W = ["협찬","체험단","광고","바이럴","제휴","대가성","앞광고","무상제공"];
     var seed = 770419;
     function rnd(){ seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; }
+    /* 한 번만 판정한다 — 장식이라 회전·크기변경에 따라다니지 않아도 된다 */
+    var narrow = window.matchMedia("(max-width: 700px)").matches;
     var html = "";
     W.forEach(function(wd, i){
-      /* 홀짝으로 좌우를 번갈아 둔다 — 같은 줄에서 두 단어가 부딪히지 않게 */
-      var x = (i % 2 ? 38 : 66) + rnd()*22;
-      var y = 3 + (i/W.length)*84;
-      var size = 18 + rnd()*26;
+      /* 넓은 화면은 왼쪽을 글에 내주고 오른쪽에 말들을 둔다.
+         좁은 화면은 좌우로 나눌 폭이 없어, 글 아래 빈 자리로 내려보낸다 —
+         그러지 않으면 말들이 제목 뒤에 겹쳐 글이 읽히지 않는다. */
+      var x = narrow ? (4 + rnd()*62) : ((i % 2 ? 38 : 64) + rnd()*24);
+      /* 위는 상단바를 피하고 아래는 끝까지 내려간다. 이전 값(3%~76%)은
+         첫 단어가 로그인·가입 버튼과 겹치고 바닥 4분의 1이 비어
+         배너가 통째로 위로 쏠려 보였다. */
+      var y = narrow ? (64 + (i/(W.length-1))*26)
+                     : (19 + (i/(W.length-1))*69);
+      var size = narrow ? (12 + rnd()*9) : (18 + rnd()*26);
       /* 글자 쪽(왼쪽)으로 갈수록 원래 흐리다 — 이미 꺼져 가는 중 */
       var a = Math.max(.08, Math.min(.52, (x-32)/68));
       /* 왼쪽 것부터 먼저 꺼진다. 또미가 글자 쪽에서부터 끄고 있다는 뜻 */
