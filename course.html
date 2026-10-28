@@ -12,8 +12,11 @@
 <link rel="stylesheet" href="place.css">
 <style>
   :root{--soft:cubic-bezier(.17,.73,.19,1)}   /* 끝에서 길게 멎는 곡선 — 덜 딱딱하다 */
-  .wrap{max-width:1160px; margin:0 auto; padding:22px 24px 112px; transition:max-width .34s var(--ease)}
-  .wrap.wide{max-width:1320px}
+  /* 기둥을 화면에 따라 늘린다(ui.css --maxw). 지도가 들어가는 단계(.wide)는 한 단계 더 넓게.
+     전환이 걸려 있어 clamp끼리 바뀌어도 그대로 부드럽게 움직인다. */
+  .wrap{width:100%; max-width:var(--maxw); margin:0 auto; padding:22px var(--gutter) 112px;
+    transition:max-width .34s var(--ease)}
+  .wrap.wide{max-width:clamp(1240px, 92vw, 1640px)}
 
   /* 진행 띠 */
   .trail{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:11px; scrollbar-width:none}
@@ -78,7 +81,7 @@
   .pick[disabled]:hover{border-color:var(--line); transform:none}
   .pick small{display:block; font-size:11.5px; opacity:.55; font-weight:500; margin-top:3px}
 
-  .lv{font-size:12.5px; font-weight:800; color:var(--muted); margin:22px 0 0}
+  .lv{font-size:13px; font-weight:800; color:var(--muted); margin:22px 0 0}
   .big{display:block; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line);
     border-radius:14px; padding:15px 19px; margin-bottom:8px; font:inherit;
     transition:border-color .16s var(--ease), background .16s}
@@ -110,7 +113,7 @@
   .tg[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
   .send{background:var(--sunken); border-radius:14px; padding:16px 18px; margin-top:12px}
   .send .ttl{font-size:14px; font-weight:800}
-  .send p{font-size:12.5px; color:var(--soft); margin:7px 0 0; line-height:1.6}
+  .send p{font-size:13px; color:var(--soft); margin:7px 0 0; line-height:1.6}
   .send .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
   .send code{background:var(--surface); padding:4px 9px; border-radius:6px; font-size:12px}
 
@@ -141,7 +144,7 @@
   .cand:hover{border-color:var(--ink); transform:translateY(-1px)}
   .cand[aria-pressed="true"]{border-color:var(--main); background:var(--tint)}
   .cand .nm{font-size:17px; font-weight:800; letter-spacing:0}
-  .cand .mt{font-size:12.5px; color:var(--soft); margin-top:3px}
+  .cand .mt{font-size:13px; color:var(--soft); margin-top:3px}
   .why{display:inline-block; font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:999px; margin-bottom:8px}
   .why.all{background:var(--main); color:#fff}
   .why.some{background:var(--tint); color:var(--main-deep)}
@@ -179,12 +182,12 @@
   .done{background:var(--surface); border-radius:16px; padding:17px 19px; animation:up .34s var(--ease) both}
   .done.alt{background:var(--sunken)}
   .done .dm{font-size:13px; color:var(--soft); margin-top:4px}
-  .walk{font-size:12.5px; color:var(--muted); padding:9px 0 9px 6px; animation:up .3s var(--ease) both}
+  .walk{font-size:13px; color:var(--muted); padding:9px 0 9px 6px; animation:up .3s var(--ease) both}
   .stamp{display:inline-block; background:var(--teal); color:#fff; font-size:12px; font-weight:800;
     padding:5px 12px; border-radius:999px; animation:pop .34s var(--ease) both}
 
   .bottom{position:fixed; left:0; right:0; bottom:0; background:var(--bg); z-index:30}
-  .bottom .in{max-width:1240px; margin:0 auto; padding:15px 24px 21px; display:flex; gap:10px; align-items:center}
+  .bottom .in{width:100%; max-width:clamp(1240px, 92vw, 1640px); margin:0 auto; padding:15px var(--gutter) 21px; display:flex; gap:10px; align-items:center}
 
   @media (max-width:980px){
     .split{grid-template-columns:1fr}

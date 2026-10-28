@@ -15,6 +15,9 @@
 <style>
   html,body{height:100%; overflow:hidden}
   .body{display:grid; grid-template-columns:1fr 400px; min-height:0}
+  /* 격자 칸은 min-width:auto라 내용의 최소 너비 밑으로 줄지 않는다.
+     폰에서 칩 줄(nowrap)이 칸을 1110px로 벌려 지도·패널이 화면 밖으로 밀려났다. */
+  .body > *{min-width:0}
   .mapwrap{position:relative; min-height:0}
   #map{position:absolute; inset:0}
   .leaflet-container{font-family:inherit; background:#F6EDDA}
@@ -75,7 +78,7 @@
   .sg{display:block; width:100%; text-align:left; border:0; background:none; padding:9px 15px}
   .sg:hover,.sg.sel{background:var(--tint)}
   .sg b{display:block; font-size:14.5px; font-weight:700}
-  .sg span{display:block; font-size:12px; color:var(--muted); margin-top:1px}
+  .sg span{display:block; font-size:12.5px; color:var(--muted); margin-top:1px}
   .sg em{font-style:normal; color:var(--main-deep)}
   .sgempty{padding:12px 15px 16px; font-size:13px; color:var(--muted); margin:0}
 
@@ -91,7 +94,7 @@
   .cats::-webkit-scrollbar{display:none}
   .cats .chip{white-space:nowrap}
 
-  .count{padding:4px 20px 10px; font-size:12.5px; color:var(--muted); margin:0; flex:none}
+  .count{padding:4px 20px 10px; font-size:13px; color:var(--muted); margin:0; flex:none}
   .count b{color:var(--ink); font-size:15px}
   .list{flex:1; overflow:auto; padding:0 20px 20px}
   .it{padding:15px 16px; border-radius:12px; cursor:pointer; background:var(--surface)}
@@ -100,14 +103,14 @@
   .it.on{background:var(--ink); color:var(--bg)}
   .it.on .im,.it.on .ip{color:rgba(255,252,242,.72)}
   .it b{font-size:15.5px; letter-spacing:0}
-  .im{display:block; font-size:12.5px; color:var(--soft); margin-top:3px}
+  .im{display:block; font-size:13px; color:var(--soft); margin-top:3px}
   .ip{display:block; font-size:11.5px; color:var(--muted); margin-top:7px}
   .it.go{background:var(--tint)}
   .it.go b{color:var(--main-deep)}
   .empty{padding:28px 4px; font-size:14px; color:var(--soft)}
   .empty .btn{margin-top:12px}
 
-  .note{padding:12px 20px 16px; background:var(--sunken); font-size:12px; color:var(--muted); line-height:1.55; margin:0; flex:none}
+  .note{padding:12px 20px 16px; background:var(--sunken); font-size:13px; color:var(--muted); line-height:1.55; margin:0; flex:none}
 
   .scrim{position:fixed; inset:0; background:rgba(42,38,32,.34); opacity:0; pointer-events:none;
     transition:opacity .24s var(--ease); z-index:600}

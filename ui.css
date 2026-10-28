@@ -15,10 +15,22 @@
   --ease:cubic-bezier(.22,1,.36,1);
   --font:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",system-ui,-apple-system,sans-serif;
   --serif:"Fraunces",Georgia,serif;
-  --maxw:1160px;
+
+  /* ── 반응형 기준값 (2026-10-28) ──
+     1160px 고정이던 기둥을 화면에 따라 늘린다. 1440 → 1210 · 1920 → 1400.
+     끝까지 늘리지 않는 이유는 읽기다 — 한 줄이 너무 길면 눈이 줄을 놓친다.
+     그래서 기둥(--maxw)은 넓히되 글 한 줄(--read)은 따로 묶고,
+     남는 폭은 그림·표가 가져가게 한다. */
+  --maxw:clamp(1040px, 84vw, 1400px);
+  --gutter:clamp(18px, 3.4vw, 40px);   /* 폰 18px → 데스크톱 40px */
+  --read:min(100%, 66ch);              /* 긴 글 한 줄의 최대 길이 */
 }
 *{box-sizing:border-box}
-body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font);
+/* 일부러 화면보다 크게 그린 장식(빛줄기 등)이 문서를 밀어 가로 스크롤을 만들지 않게 한다.
+   장식은 잘려도 되지만 페이지가 좌우로 흔들리면 안 된다.
+   hidden이 아니라 clip이어야 한다 — hidden은 스크롤 컨테이너를 만들어 sticky를 깨뜨린다. */
+html{overflow-x:clip}
+body{overflow-x:clip; margin:0; background:var(--bg); color:var(--ink); font-family:var(--font);
   line-height:1.6; letter-spacing:0; -webkit-font-smoothing:antialiased;
   word-break:keep-all; overflow-wrap:break-word}  /* 한글은 어절 중간에서 끊지 않는다 */
 a{color:inherit; text-decoration:none}
@@ -72,18 +84,18 @@ button{font-family:inherit; cursor:pointer}
 .t1{font-size:clamp(26px,3.2vw,38px); line-height:1.15; letter-spacing:-.02em; font-weight:800; margin:0}
 .t2{font-size:20px; font-weight:800; letter-spacing:0; margin:0}
 .t3{font-size:16px; font-weight:700; letter-spacing:0; margin:0}
-.lede{font-size:15px; color:var(--soft); margin:12px 0 0}
-.small{font-size:12.5px; color:var(--muted)}
+.lede{font-size:clamp(15px,1.15vw,17px); color:var(--soft); margin:12px 0 0}
+.small{font-size:clamp(13px,.85vw,14px); color:var(--muted)}
 
 /* ── 폼 ── */
 .fl{display:block; font-size:13px; font-weight:700; margin:16px 0 6px}
 .fi{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
   font:inherit; font-size:15px; background:var(--surface); color:var(--ink)}
 .fi:focus{outline:none; border-color:var(--main)}
-.hint{font-size:12.5px; color:var(--muted); margin:6px 0 0}
+.hint{font-size:clamp(13px,.85vw,14px); color:var(--muted); margin:6px 0 0}
 .hint.bad{color:var(--main-deep); font-weight:700}
 .hint.ok{color:var(--teal); font-weight:700}
-.sep{text-align:center; margin:24px 0; color:var(--muted); font-size:12.5px; font-weight:600}
+.sep{text-align:center; margin:24px 0; color:var(--muted); font-size:clamp(13px,.85vw,14px); font-weight:600}
 
 /* ── 알림 ── */
 .msg{margin:16px 0 0; padding:12px 14px; border-radius:10px; font-size:13.5px; line-height:1.55; display:none}
@@ -103,14 +115,20 @@ button{font-family:inherit; cursor:pointer}
 .badge.quiet{background:var(--muted)}
 
 /* ── 레이아웃 ── */
-.center-wrap{max-width:460px; margin:0 auto; padding:56px 24px 80px}
-.page-wrap{max-width:var(--maxw); margin:0 auto; padding:48px 24px 80px}
+.center-wrap{max-width:460px; margin:0 auto; padding:56px var(--gutter) 80px}
+.page-wrap{width:100%; max-width:var(--maxw); margin:0 auto; padding:48px var(--gutter) 80px}
+/* 기둥이 넓어져도 긴 글은 읽기 좋은 길이에서 멈춘다. 표·카드·그림은 넓게 쓴다. */
+.page-wrap > p, .page-wrap > ul, .page-wrap > ol, .page-wrap .lede{max-width:var(--read)}
 .app-shell{display:grid; grid-template-rows:auto 1fr; height:100svh}
+/* 격자 칸은 기본값(min-width:auto)이라 내용의 최소 너비 밑으로 줄지 않는다.
+   상단바의 메뉴·버튼이 nowrap이라 칸이 1110px로 벌어지고, 폰에서는 그 바깥이
+   overflow:hidden에 잘려 로그인·가입 버튼이 통째로 사라졌다. 줄어들 수 있게 푼다. */
+.app-shell > *{min-width:0}
 
 footer.ui-foot{background:var(--surface); padding:44px 0 60px; margin-top:48px}
-footer.ui-foot .in{max-width:var(--maxw); margin:0 auto; padding:0 24px}
-footer.ui-foot .links{display:flex; gap:20px; font-size:13.5px; color:var(--soft); margin-top:14px; flex-wrap:wrap}
-footer.ui-foot .copy{font-size:12.5px; color:var(--muted); margin-top:20px}
+footer.ui-foot .in{width:100%; max-width:var(--maxw); margin:0 auto; padding:0 var(--gutter)}
+footer.ui-foot .links{display:flex; gap:20px; font-size:clamp(13.5px,.95vw,15px); color:var(--soft); margin-top:14px; flex-wrap:wrap}
+footer.ui-foot .copy{font-size:clamp(13px,.85vw,14px); color:var(--muted); margin-top:20px}
 
 @media (max-width:640px){
   /* 좁은 화면에서도 길을 없애지 않는다 — 바를 두 줄로 접는다 */
@@ -121,7 +139,7 @@ footer.ui-foot .copy{font-size:12.5px; color:var(--muted); margin-top:20px}
   .ui-bar nav a{padding:7px 10px; font-size:13.5px; white-space:nowrap}
   .ui-bar .wordmark{white-space:nowrap}
   .ui-bar .screen{margin-left:0; font-size:14px; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .center-wrap{padding:36px 16px 64px}
+  .center-wrap{padding:36px var(--gutter) 64px}
   .card{padding:22px}
 }
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
